@@ -2,6 +2,12 @@
 
 Guidance for Claude Code when working in this repository.
 
+## Start here
+
+`HANDOFF.md` at the repo root records current aircraft state, what is verified versus untested,
+outstanding work, and the findings that cost real time to establish. Read it before doing anything
+with the Pavo20 Pro II.
+
 ## What this is
 
 Betaflight flight controller configurations, hardware notes and setup guides for a small fleet of

@@ -5,6 +5,8 @@ Betaflight configurations, hardware notes and setup guides for my FPV quads.
 These are not source code. They are flight controller configuration backups (`diff all` dumps),
 tuned variants of those, and the documentation needed to rebuild each aircraft from scratch.
 
+Current state, outstanding work and open questions: **[HANDOFF.md](HANDOFF.md)**.
+
 ## The fleet
 
 | Quad | Class | Board | Video | Link |
