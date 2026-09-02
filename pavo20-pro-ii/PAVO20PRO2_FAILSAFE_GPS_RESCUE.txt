@@ -1,0 +1,61 @@
+# Pavo20 Pro II 4S - Failsafe: GPS Rescue
+#
+# Paste AFTER the main config (PAVO20PRO2_ELRS_V1.txt). This file deliberately has NO
+# "batch start", so a single rejected line does not block the rest or refuse the save.
+#
+# DO NOT PASTE THIS UNTIL GPS RESCUE HAS BEEN TESTED ON A SWITCH.
+# See FAILSAFE.md. An untested GPS Rescue is more dangerous than no rescue at all -
+# a bad configuration flies the aircraft away under power instead of dropping it.
+#
+# Values below are deliberately conservative for a 2.2" ducted cinewhoop carrying an
+# O4 Pro: low speeds, low climb rates, a short return altitude, and a min-start distance
+# that keeps it from triggering during close-in flying.
+
+# ---- Failsafe procedure -------------------------------------------------------
+set failsafe_procedure = GPS_RESCUE
+
+# ---- Preconditions ------------------------------------------------------------
+# Refuse to arm without a fix, and require a healthy satellite count before a rescue
+# is considered valid. Do not lower these.
+set gps_rescue_allow_arming_without_fix = OFF
+set gps_rescue_min_sats = 8
+
+# Under this distance from home, do a simple descent instead of flying back.
+# A cinewhoop spends most of its life within 30 m of the pilot; flying "home" from
+# 8 m away is more dangerous than landing where it is.
+set gps_rescue_min_start_dist = 15
+
+# ---- Climb and return ---------------------------------------------------------
+# Climb 10 m before turning for home, then return at 25 m.
+set gps_rescue_initial_climb = 10
+set gps_rescue_return_alt = 25
+
+# 2 m/s up, 1 m/s down. Gentle - this airframe has little thrust margin.
+set gps_rescue_ascend_rate = 200
+set gps_rescue_descend_rate = 100
+
+# 5 m/s ground speed. Slow enough to stay controllable, fast enough to make progress
+# against light wind. A 2.2" ducted quad has poor penetration; do not raise this
+# expecting it to fight wind, it cannot.
+set gps_rescue_ground_speed = 500
+
+# Begin descending 15 m out from home.
+set gps_rescue_descent_dist = 15
+
+save
+
+# ---- Settings that need checking on your firmware -----------------------------
+# These two are lookup values whose allowed options vary by version. Run:
+#
+#   get gps_rescue_alt_mode
+#   get gps_rescue_sanity_checks
+#
+# which print the allowed values, then set them explicitly and "save" again.
+#
+# Recommended intent:
+#   gps_rescue_alt_mode      -> the "max altitude reached this flight" option.
+#                               Safest near obstacles: it will not descend into
+#                               something it already flew above.
+#   gps_rescue_sanity_checks -> leave ON. It aborts a rescue that is not making
+#                               progress toward home, which is what stops a
+#                               misconfigured rescue from flying away.

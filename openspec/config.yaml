@@ -1,0 +1,22 @@
+schema: spec-driven
+
+context: |
+  Betaflight flight controller configurations for a fleet of FPV quads. Not software - the
+  artifacts are CLI config files pasted into Betaflight Configurator, plus the hardware and
+  setup documentation needed to rebuild each aircraft.
+
+  Aircraft: Pavo20 Pro II (2.2" ducted cinewhoop, BETAFPVG473_V3, DJI O4 Air Unit Pro),
+  Meteor75 Pro (1S whoop, BETAFPVG473), FireFly25 (2.5", FLYWOOF405S_AIO).
+
+  There is no test suite. Verification means pasting a config into a real flight controller
+  and flying it. A wrong value is a crash, a burned motor, or an injury - not a red test.
+
+  Shared Betaflight reference lives in docs/betaflight-reference.md.
+
+rules:
+  specs:
+    - "A requirement about firmware behaviour must cite the Betaflight source that establishes it - file and the relevant lines - and name the firmware version the citation was read at. Betaflight behaviour is version-dependent and frequently counter-intuitive; three separate confident diagnoses in this repo's history were overturned by reading the source, and two more by measuring the hardware. `pavo20-pro-ii/GPS_SETUP.md` is the shape: every claim about the GPS driver quotes `gps.c` or `osd_elements.c`."
+    - "A requirement that constrains wiring or pin assignment must name the physical pad, the MCU pin and the board target it applies to, because a pad label alone is not portable between boards. The GPS/SBUS contention on the Cube G4 was invisible while described as 'GPS on UART1' and obvious once written as 'GPS module TX on R1 = PA10, shared with the air unit connector'."
+    - "Where a requirement states that a configuration is correct, it must also state the observation that would falsify it, and that observation must be one that fails when the thing is broken. `status` reporting `GPS: connected` was treated as evidence for several rounds before a control test with the module physically unplugged showed it reads true regardless. Prefer an indicator with a causal path to the thing being checked - a satellite count depends on a parsed frame; a state-machine label does not."
+  design:
+    - "Record under `## Open Questions` what the change deliberately leaves untested on real hardware, and say what would settle each. Bench verification and flight verification are different claims: a config that pastes cleanly, saves, and reports sane values has not been shown to fly. Where a decision affects flight safety - failsafe behaviour, PID values, arming conditions - state the test that must happen before it is trusted, and who performs it."

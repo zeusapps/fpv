@@ -1,0 +1,311 @@
+# Pavo20 Pro II 4S (Cube G473_V3) - ELRS / HelloRadio V12 MAX
+#
+# Base:  BetaFPV BF2025.12.5 Cube G473_30A Pavo20 Pro II ELRS 20260812
+# Adds:  GPS on UART2 (BZGNSS BZ-181, NMEA 115200), this airframe's AUX layout,
+#        OSD layout with GPS + O4 VTX temperature, Cine/Base/Scale-70 rate profiles
+#
+# REQUIRES the rewire described in GPS_SETUP.md:
+#   LED yellow (data)       R2 (PA3)  -> T1 (PA9)
+#   GPS yellow (module TX)  R1 (PA10) -> R2 (PA3)
+#   GPS white  (module RX)  T1 (PA9)  -> T2 (PA2)
+# R1/PA10 is shared with the DJI O4 air unit's SBUS output. GPS on UART1 with the O4
+# connected puts two drivers on one net and corrupts the GPS data.
+#
+# AFTER PASTING: re-run Calibrate Accelerometer. Do not fly without it.
+#
+# NOTE: profile_name and rateprofile_name are limited to 8 characters. Longer names
+# fail with "STRING MUST BE 1-8 CHARACTERS" and abort the whole batch at save.
+
+batch start
+
+defaults nosave
+
+board_name BETAFPVG473_V3
+manufacturer_id BEFH
+
+# name: Pavo20 Pro II
+
+# resources
+resource LED_STRIP 1 A09
+resource SERIAL_TX 1 NONE
+
+# timer
+timer A09 AF6
+# pin A09: TIM1 CH2 (AF6)
+
+# dma
+dma pin A09 8
+# pin A09: DMA2 Channel 1 Request 43
+
+# feature
+feature GPS
+feature TELEMETRY
+feature LED_STRIP
+feature OSD
+
+# serial
+# UART1 off  (PA9 is the LED strip; PA10 carries the O4's SBUS, unused in ELRS mode)
+# UART2 GPS  (BZ-181)
+# UART3 ELRS receiver
+# UART4 DJI O4 MSP DisplayPort (board default, absent from a diff)
+serial UART1 0 115200 57600 0 115200
+serial UART2 2 115200 115200 0 115200
+serial UART3 64 115200 57600 0 115200
+
+# beacon
+beacon RX_LOST
+beacon RX_SET
+
+# led
+led 0 0,0::CB:9
+led 1 1,0::CB:9
+led 2 2,0::CB:9
+led 3 3,0::CB:9
+led 4 4,0::CB:9
+led 5 5,0::CB:9
+led 6 6,0::CB:9
+led 7 0,1::CB:9
+led 8 1,1::CB:9
+led 9 2,1::CB:9
+led 10 3,1::CB:9
+led 11 4,1::CB:9
+led 12 5,1::CB:9
+led 13 6,1::CB:9
+led 14 2,3::C:6
+led 15 3,3::C:6
+
+# aux
+# AUX1/CH5 high  = ARM
+# AUX2/CH6 low   = ANGLE     mid = ACRO     high = TURTLE
+# AUX3/CH7 high  = PREARM    <-- quad will NOT arm without this
+# AUX4/CH8 high  = BEEPER
+# AUX5/CH9 high  = LEDLOW    low/mid selects rate profile via adjrange
+aux 0 0 0 1700 2100 0 0
+aux 1 1 1 900 1300 0 0
+aux 2 13 3 1700 2100 0 0
+aux 3 15 4 1700 2100 0 0
+aux 4 35 1 1650 2100 0 0
+aux 5 36 2 1700 2100 0 0
+
+# adjrange
+adjrange 0 0 4 900 1250 12 4 0 0
+adjrange 1 0 4 1300 1700 12 4 0 0
+
+# master
+set gyro_lpf1_static_hz = 0
+set gyro_lpf2_static_hz = 600
+set dyn_notch_count = 1
+set dyn_notch_q = 500
+set dyn_notch_min_hz = 150
+set gyro_lpf1_dyn_min_hz = 0
+
+# airframe levelling - YOURS, not BetaFPV's. Re-run Calibrate Accelerometer after flashing.
+set acc_trim_pitch = 5
+set acc_trim_roll = -1
+set acc_calibration = -66,3,-68,1
+
+set mag_hardware = NONE
+set motor_idle = 950
+set dshot_bidir = ON
+set motor_pwm_protocol = DSHOT300
+set motor_poles = 12
+set motor_output_reordering = 2,3,0,1,4,5,6,7
+set align_board_roll = 180
+set align_board_yaw = 45
+set vbat_max_cell_voltage = 440
+set ibata_scale = 280
+set ibata_offset = 70
+set small_angle = 180
+set pid_process_denom = 2
+set simplified_gyro_filter_multiplier = 120
+
+# GPS - BZ-181 on UART2. NMEA at a fixed 115200; this module never answers UBX MON-VER,
+# so UBLOX cannot complete baud detection. Do not set gps_provider = UBLOX.
+set gps_set_home_point_once = ON
+set gps_provider = NMEA
+set gps_auto_baud = OFF
+set gps_auto_config = OFF
+
+# OSD - HD canvas 53x20 via MSP DisplayPort. Values below 2048 are hidden.
+set osd_rssi_dbm_alarm = -98
+set osd_vbat_pos = 2601
+set osd_rssi_pos = 192
+set osd_link_quality_pos = 2466
+set osd_rssi_dbm_pos = 2434
+set osd_rsnr_pos = 160
+set osd_tim_2_pos = 2530
+set osd_flymode_pos = 2370
+set osd_throttle_pos = 2338
+set osd_crosshairs_pos = 313
+set osd_ah_pos = 2086
+set osd_current_pos = 2625
+set osd_craft_name_pos = 2644
+set osd_gps_speed_pos = 2114
+set osd_gps_lon_pos = 2103
+set osd_gps_lat_pos = 2135
+set osd_gps_sats_pos = 2146
+set osd_home_dir_pos = 2424
+set osd_home_dist_pos = 2178
+set osd_altitude_pos = 3141
+set osd_pidrate_profile_pos = 98
+set osd_warnings_pos = 14837
+set osd_avg_cell_voltage_pos = 2594
+set osd_esc_tmp_pos = 129
+set osd_core_temp_pos = 3246
+set osd_rate_profile_name_pos = 2082
+set osd_pid_profile_name_pos = 66
+set osd_profile_name_pos = 130
+set osd_sys_vtx_temp_pos = 2210
+
+set debug_mode = GYRO_FILTERED
+set craft_name = Pavo20 Pro II
+
+profile 0
+
+# profile 0 - BetaFPV's O4 Pro tune, auto-selected on 3S
+set profile_name = O4Pro3S
+set dterm_lpf1_dyn_min_hz = 86
+set dterm_lpf1_dyn_max_hz = 172
+set dterm_lpf1_static_hz = 86
+set dterm_lpf2_static_hz = 172
+set iterm_relax_cutoff = 5
+set p_pitch = 54
+set i_pitch = 97
+set d_pitch = 45
+set f_pitch = 86
+set p_roll = 47
+set i_roll = 84
+set d_roll = 36
+set f_roll = 75
+set p_yaw = 47
+set i_yaw = 84
+set f_yaw = 75
+set d_max_roll = 36
+set d_max_pitch = 45
+set auto_profile_cell_count = 3
+set simplified_master_multiplier = 105
+set simplified_d_gain = 115
+set simplified_d_max_gain = 0
+set simplified_feedforward_gain = 60
+set simplified_pitch_d_gain = 110
+set simplified_pitch_pi_gain = 110
+set simplified_dterm_filter_multiplier = 115
+set tpa_rate = 70
+set tpa_breakpoint = 1340
+
+profile 1
+
+# profile 1 - same tune, auto-selected on 4S
+set profile_name = O4Pro4S
+set dterm_lpf1_dyn_min_hz = 86
+set dterm_lpf1_dyn_max_hz = 172
+set dterm_lpf1_static_hz = 86
+set dterm_lpf2_static_hz = 172
+set iterm_relax_cutoff = 5
+set p_pitch = 54
+set i_pitch = 97
+set d_pitch = 45
+set f_pitch = 86
+set p_roll = 47
+set i_roll = 84
+set d_roll = 36
+set f_roll = 75
+set p_yaw = 47
+set i_yaw = 84
+set f_yaw = 75
+set d_max_roll = 36
+set d_max_pitch = 45
+set auto_profile_cell_count = 4
+set simplified_master_multiplier = 105
+set simplified_d_gain = 115
+set simplified_d_max_gain = 0
+set simplified_feedforward_gain = 60
+set simplified_pitch_d_gain = 110
+set simplified_pitch_pi_gain = 110
+set simplified_dterm_filter_multiplier = 115
+set tpa_rate = 70
+set tpa_breakpoint = 1340
+
+profile 2
+
+# profile 2 - BetaFPV's softer "DJI O4" tune. Manual selection only.
+set profile_name = O4 Soft
+set dterm_lpf1_dyn_min_hz = 86
+set dterm_lpf1_dyn_max_hz = 172
+set dterm_lpf1_static_hz = 86
+set dterm_lpf2_static_hz = 172
+set iterm_relax_cutoff = 5
+set p_pitch = 48
+set i_pitch = 86
+set d_pitch = 38
+set f_pitch = 45
+set p_roll = 40
+set i_roll = 72
+set d_roll = 29
+set f_roll = 37
+set p_yaw = 40
+set i_yaw = 72
+set f_yaw = 37
+set d_max_roll = 29
+set d_max_pitch = 38
+set auto_profile_cell_count = 0
+set simplified_master_multiplier = 90
+set simplified_d_gain = 110
+set simplified_d_max_gain = 0
+set simplified_feedforward_gain = 35
+set simplified_pitch_d_gain = 115
+set simplified_pitch_pi_gain = 115
+set simplified_dterm_filter_multiplier = 115
+set tpa_rate = 70
+set tpa_breakpoint = 1280
+
+profile 3
+
+# restore original profile selection
+profile 0
+
+rateprofile 0
+
+# rateprofile 0 - CINE. ACTUAL rates: centre 40 deg/s, max 450 deg/s, high expo.
+# Smooth stick feel for footage. Cinematic flying comes from here, not from the PIDs.
+set rateprofile_name = Cine
+set thr_mid = 34
+set thr_expo = 40
+set thr_hover = 34
+set rates_type = ACTUAL
+set roll_rc_rate = 4
+set pitch_rc_rate = 4
+set yaw_rc_rate = 4
+set roll_expo = 45
+set pitch_expo = 45
+set yaw_expo = 40
+set roll_srate = 45
+set pitch_srate = 45
+set yaw_srate = 40
+
+rateprofile 1
+
+# rateprofile 1 - BASE. BetaFPV stock rates, full authority.
+set rateprofile_name = Base
+set thr_mid = 34
+set thr_expo = 40
+set thr_hover = 34
+
+rateprofile 2
+
+# rateprofile 2 - SCALE 70. Stock rates, throttle limited to 70% for tight indoor work.
+set rateprofile_name = Scale 70
+set thr_mid = 34
+set thr_expo = 40
+set thr_hover = 34
+set throttle_limit_type = SCALE
+set throttle_limit_percent = 70
+
+rateprofile 3
+
+# restore original rateprofile selection
+rateprofile 0
+
+# save configuration
+save
+
