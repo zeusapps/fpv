@@ -45,11 +45,16 @@ The file's own header comment already asserted the correct behaviour —
 **Failing observation:** a code that renders and looks plausible on screen while a phone will not
 lock onto it. "It displays" is not evidence — only a successful scan is.
 
-**Status, 2026-09-03:** the fixed version scans, on the theme the radio was running. So the code as
-committed is good. Whether the *shipped* version would also have scanned is still unknown, and that
-is what decides repair vs insurance. It needs the paired comparison on a dark theme — new version,
-then `a3b2c6d`'s `main.lua` on the same theme. Not blocking; recorded so nobody later reads "it
-scans" as proof the defect was real.
+**Status, 2026-09-03: insurance on the themes tried, not yet shown to be a repair on any.** Both
+versions have scanned — the shipped one on the theme in use beforehand, the fixed one on the theme
+the radio reset to during the reinstall. Different themes, so still no controlled comparison, and
+neither version has been observed to fail.
+
+So on at least one theme the EdgeTX defaults had adequate contrast. The fix stays worth having for
+a reason the reinstall demonstrated by accident: **the theme changed on its own.** The shipped code
+made scannability depend on a variable that moves without being asked, and a recovery tool should
+not have a working-or-not that turns on a display preference. Recorded plainly so nobody later
+reads "it scans" as proof the defect was real — it is not.
 
 ### 2. A failed SD write retried on every frame
 
@@ -117,6 +122,32 @@ zero-sized `qrcode` was not established, and did not need to be: neither outcome
 **Fix:** `MIN_QR = 56`. Below it the widget renders the coordinates as text instead — still usable,
 because a human can type them into a map by hand — rather than handing `lvgl.qrcode` a degenerate
 dimension.
+
+## Found after the review, not yet fixed
+
+### The saved fix is shared across all models
+
+**Severity: high.** Missed in the original review; surfaced 2026-09-03 when the widget showed a
+position on the Pavo20 and the question "is that actually the Pavo's?" could not be answered from
+the screen.
+
+`SAVE_PATH = "/LOGS/gpsqr_last.txt"` is a single path for the entire radio. `loadSaved` runs in
+`create`, with no reference to the active model. So switching models restores the *previous
+model's* last position and displays it as `SAVED`, with nothing on screen indicating it belongs to
+a different aircraft.
+
+**Field consequence: it can send you to the wrong field.** Every other finding in this document is
+about the widget failing to tell you something. This one is about it telling you something false
+with a straight face, which for a tool whose only job is "walk this way" is the worse failure. It
+also quietly undermines the Pavo20 telemetry check: a `SAVED` position on the Pavo model is not
+evidence that the Pavo is sending GPS at all.
+
+**Not fixed here.** The widget is in service and this is a change of its own — the fix is a
+per-model save path (model name in the filename, from `model.getInfo()`), plus deciding what to do
+with an existing single-file save. Worth doing before the next serious search.
+
+**Interim mitigation:** trust `LIVE` and an age. Treat `SAVED` as "some aircraft's last position,
+possibly not this one" until the path is per-model.
 
 ## Found and deliberately not fixed
 

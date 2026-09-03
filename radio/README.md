@@ -65,10 +65,19 @@ zone. Written up in `../HANDOFF.md` item 5, and in the Open Questions of
 |---|---|
 | `LIVE` | a fix arrived in the last 5 s |
 | `47s ago` / `3m ago` | time since the last fix was received |
-| `SAVED` | restored from the SD card after a radio power cycle; age unknown |
+| `SAVED` | restored from the SD card; age unknown, **and possibly from a different model** |
 
 The status is always shown. A QR code on its own does not tell you whether you are looking at a
 position from thirty seconds ago or from last weekend.
+
+> **`SAVED` is not necessarily this aircraft's position.** The widget writes to one file,
+> `/LOGS/gpsqr_last.txt`, for the whole radio — not one per model. Switch models and it restores
+> and displays the *previous* model's last fix, marked `SAVED`, with nothing on screen saying which
+> aircraft it came from.
+>
+> **Trust `LIVE` and an age. Treat `SAVED` as "some aircraft's last position" until you have seen
+> a live fix on the model you are flying.** This is a real defect, found 2026-09-03 and not yet
+> fixed — the fix is a per-model save path. `CODE_REVIEW.md` has the detail.
 
 ### What the position actually is
 
@@ -127,10 +136,10 @@ Sensors that should appear:
 | `GSpd` | Ground speed |
 | `Hdg` | Heading |
 
-This is confirmed working on the FireFly25. **On the Pavo20 it is untested** — telemetry to the
-radio is a different path from the OSD, and the Pavo20's GPS only started working on 2026-09-01.
-Until `GPS`, `Sats` and `Alt` are seen in the sensor list on that aircraft, the widget is
-FireFly25-only in practice.
+Confirmed working on the FireFly25. **On the Pavo20, almost certainly working** — the widget has
+displayed a position while bound to that model, which needs the `GPS` sensor in the stream. One
+caveat before calling it confirmed: see the `SAVED` warning below, because a restored position from
+another model looks the same on screen.
 
 ### GPS module configuration
 

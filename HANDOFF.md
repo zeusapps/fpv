@@ -58,12 +58,15 @@ This distinction matters more than usual — these configs fly real hardware.
 - **The SBUS config.** `PAVO20PRO2_SBUS_V1.txt` has never been pasted or flown.
 - **OSD altitude after arming.** It reads ground elevation (~124 m) while disarmed, which is
   expected. That it zeroes on arming was explained from source but not observed in flight.
-- **GPS telemetry reaching the radio.** Confirmed on the FireFly25. **Never checked on the
-  Pavo20.** Telemetry to the radio is a different path from the OSD — the OSD reads the FC's own
-  GPS state, while the radio needs the FC to put `GPS`, `Sats` and `Alt` into the CRSF stream and
-  the radio to have discovered those sensors. Until that is seen on this aircraft, the GPSQR
-  widget is FireFly25-only in practice.
-- **The GPSQR widget itself.** Committed and code-reviewed, never run. See below.
+- **GPS telemetry reaching the radio — almost certainly working, one check outstanding.** The
+  GPSQR widget displayed a real position while bound to the Pavo20, which it cannot do unless the
+  `GPS` sensor is in the CRSF stream carrying non-zero coordinates. **The caveat:** the widget's
+  save file `/LOGS/gpsqr_last.txt` is one file for the whole radio, not per model. A position
+  restored from a previous FireFly25 flight would be displayed on the Pavo20 model too, marked
+  `SAVED`, and would look identical to the Pavo working. If the status read `LIVE` or an age, this
+  is confirmed. If it read `SAVED`, it proves nothing. Five seconds to settle: bind to the Pavo
+  outdoors and check the status word.
+- **The GPSQR widget itself.** Installed and working. See below.
 
 ## Outstanding work
 
@@ -137,9 +140,9 @@ in `radio/CODE_REVIEW.md`.
   radio received* — the last one transmitted before the link died — not the resting place. The gap
   has never been measured. Land normally, note the coordinates, pace out the error, write the
   number down. Until then no accuracy figure is quoted anywhere, on purpose.
-- **GPS telemetry on the Pavo20.** Run Delete all sensors → Discover new sensors with the aircraft
-  powered outdoors. If `GPS`, `Sats` and `Alt` do not appear, the widget cannot work on that
-  aircraft no matter how correct the code is. It is FireFly25-only until they do.
+- **That the Pavo20 position was live, not a stale FireFly25 fix.** See the telemetry bullet
+  above. The save file is shared across models, so `SAVED` on the Pavo model may be the FireFly's
+  last position. Check the status word reads `LIVE` or an age.
 - **The coordinate origin, so any zone but full-screen.** EdgeTX does not document whether a
   widget's LVGL `x`/`y` are relative to its zone or to the screen, and its own example implies the
   screen. A full-screen zone cannot tell you — the origin is `0, 0` either way, so both readings
@@ -152,11 +155,21 @@ in `radio/CODE_REVIEW.md`.
 - **The failed-SD-write path.** The bench install had a working `/LOGS/`, which exercises the
   success path. Rename `/LOGS/` on the card, run with a live fix for a minute, and watch for the
   radio stuttering.
-- **Whether the colour fix was a repair or insurance.** The scan was of the fixed version, on the
-  theme in use. Whether the shipped version would also have scanned is unknown. Set a dark theme,
-  scan the current widget, then copy `a3b2c6d`'s `main.lua` to the card and scan again on the same
-  theme. Low stakes — the fix is right either way — but "it scans" is not proof the defect was
-  real, and should not be recorded as if it were.
+- **Whether the colour fix was a repair or insurance.** Both versions have now scanned — but on
+  *different themes*, so there is still no controlled comparison. The shipped version scanned on
+  the theme in use before the reinstall; the fixed version scans on the theme the radio reset to.
+  Neither has been observed to fail. What this does establish is that on at least one theme the
+  EdgeTX defaults had enough contrast, so the fix is insurance on that theme rather than a repair.
+  It stays worth having precisely because the theme changed by itself during the reinstall — the
+  variable the shipped code depended on is one that moves without being asked.
+
+- **New finding, not yet acted on: the save file is shared across models.**
+  `SAVE_PATH = "/LOGS/gpsqr_last.txt"` is one file for the whole radio. Switch models and the
+  widget shows the previous model's last position, marked `SAVED`, with nothing indicating it
+  belongs to a different aircraft. For a tool whose entire job is telling you where to walk, that
+  is a wrong-answer-with-confidence failure mode, and it is worse than showing nothing. A per-model
+  path — the model name in the filename — would fix it. Not attempted here; it is a change of its
+  own, and the widget is in service.
 
 The original `GPSQR_widget.zip` is still in `Downloads/`. The committed copy is confirmed working,
 so it can go whenever.
