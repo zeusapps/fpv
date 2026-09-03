@@ -60,7 +60,27 @@ see exactly which options a cloud build was compiled with.
 ## OpenSpec
 
 This project uses OpenSpec. Specs live in `openspec/specs/`, changes in `openspec/changes/`.
-Use the `opsx` commands and `openspec-*` skills as in the user's other projects.
+The workflow profile is the `core` set plus `ff`: propose, explore, apply, update, sync, archive,
+ff. Start a change with `/opsx:propose`, revise its plan with `/opsx:update`, implement with
+`/opsx:apply`. `new`, `continue`, `bulk-archive`, `verify` and `onboard` are not installed.
+
+### Local customisations to the generated files
+
+`openspec update` rewrites everything under `.claude/commands/opsx/` and `.claude/skills/` from
+its own templates and preserves no edits. Two customisations must be re-applied after every
+update:
+
+1. **Step 0, the CLI version check** — in `.claude/commands/opsx/propose.md` and in the
+   `openspec-propose` skill. It compares `openspec --version` against
+   `npm view @fission-ai/openspec version` and offers the upgrade if they differ. Both files also
+   need `Bash(npm view:*)` added to `allowed-tools`.
+2. **The `/opsx:ff` alias** — `.claude/commands/opsx/ff.md` is hand-written and delegates to the
+   `openspec-propose` skill. `ff` is kept in the profile only so the file is regenerated rather
+   than deleted as drift. After an update it reverts to the genuine fast-forward workflow, which
+   still works but has no planning boundary.
+
+Never run `openspec update --force` in this repo. It deletes the OpenSpec prompt files under
+`~/.codex/prompts/` and writes a stale `.agents/skills/` tree into the working directory.
 
 Specs here describe **aircraft configuration requirements** — what a config must guarantee, and
 why — rather than software behaviour. A spec is the right home for a constraint that outlived the
