@@ -27,6 +27,12 @@ Maps opens with a pin on the drone.
 It is the backup for GPS Rescue. On the Pavo20 the rescue is configured and **has never been
 tested** (`../pavo20-pro-ii/FAILSAFE.md`), which is most of why the widget is worth having.
 
+**State, 2026-09-03.** Installed and working on the V12 MAX: it loads, the QR scans with a phone,
+the status word shows, and a fix survives a radio power cycle and comes back marked `SAVED`.
+Not yet exercised in the field — and "survives a power cycle" is not the same event as "survives a
+failsafe", which is telemetry stopping mid-stream rather than a clean shutdown with a fix already
+on the card. What is still unverified is listed in `../HANDOFF.md` item 5.
+
 ### Install
 
 1. Copy `WIDGETS/` from this folder to the **root of the radio's SD card**, so the file ends up at

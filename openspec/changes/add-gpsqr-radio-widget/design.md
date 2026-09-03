@@ -185,8 +185,26 @@ uninstall — the widget is one file plus `/LOGS/gpsqr_last.txt`.
 
 ## Open Questions
 
-These are deliberately left untested. Each names what would settle it. The user performs all of
-them — the radio and the aircraft are not accessible from here.
+These were deliberately left untested at planning time. Each names what would settle it. The user
+performs all of them — the radio and the aircraft are not accessible from here.
+
+### Answered 2026-09-03, bench install
+
+The fixed widget was copied to the card and run on the radio. Confirmed by the user:
+
+- **It loads and runs.** No Lua error.
+- **The QR scans.** Pointed a phone at it and got the Maps pin.
+- **The status word is visible** — `LIVE` / `SAVED` / age renders alongside the code.
+- **It survives a radio power cycle.** Powered off and back on with the drone unpowered; it came
+  back showing the previously saved position.
+
+That closes the persistence requirement and the "position always carries its age" requirement for
+the zone geometry actually in use. It does **not** close the two questions below that it looks like
+it might — see the qualifications there. Everything still open moved to `HANDOFF.md` item 5 when
+this change was archived, at the user's direction, so it is tracked as named outstanding work
+rather than lost.
+
+### Still open
 
 **Is a widget's LVGL coordinate origin the zone or the screen?** Assign the widget to a
 half-screen zone with a fix present. If the QR draws inside the zone, coordinates are
@@ -195,16 +213,23 @@ the neighbouring widget, every `x`/`y` needs `+ w.zone.x` / `+ w.zone.y`. A full
 cannot answer this — the origin is `0, 0` and both readings agree. Until this is answered,
 `radio/README.md` must keep recommending a full-screen zone.
 
-**Does the black-on-white fix actually scan on a dark theme?** The defect was found by reading the
-EdgeTX API reference, not by observing a failed scan. Set the radio to a dark theme, display a
-fix, and scan with a phone — before the fix and after. If the shipped version already scanned
-fine, the theme's `COLOR_THEME_SECONDARY3` happens to be light and the fix is insurance rather
-than a repair. Either way it is worth having; the point is to record which it was.
+**Was the black-on-white fix a repair or insurance?** Partially answered. The *fixed* version
+scans, on the theme the radio was running on 2026-09-03. That is not the question. The question is
+whether the *shipped* version would also have scanned, which decides whether a real defect was
+closed or a latent one was pre-empted. Settling it needs the comparison the fix was designed
+around: set the radio to a dark theme, display a fix, scan — then check out `a3b2c6d`, copy that
+`main.lua` to the card, and scan again on the same theme. If the old one fails there, it was a
+repair.
 
-**Does the widget still show the position after a genuine failsafe?** Everything so far is bench
-reasoning. The real test: fly out, cut the link deliberately in a safe place (props off on the
-bench for the first pass, per `pavo20-pro-ii/FAILSAFE.md`), and confirm the widget holds the last
-fix and starts counting the age up rather than blanking or freezing at `LIVE`.
+Low stakes either way: the fix costs two keys per element and pins behaviour that was otherwise at
+the mercy of a theme variable. Worth knowing, not worth blocking on.
+
+**Does the widget still show the position after a genuine failsafe?** Still open, and this is the
+one that matters most. The bench install showed persistence across a deliberate power cycle, which
+is a different event: the radio shut down cleanly with a fix already saved. A failsafe is telemetry
+stopping mid-stream. The real test: fly out, cut the link deliberately in a safe place (props off
+on the bench for the first pass, per `pavo20-pro-ii/FAILSAFE.md`), and confirm the widget holds the
+last fix and starts counting the age up rather than blanking or freezing at `LIVE`.
 
 **Is the saved fix accurate enough to walk to?** The widget shows the last fix *received by the
 radio*, which is the last fix transmitted before the link died — not where the quad came to rest.

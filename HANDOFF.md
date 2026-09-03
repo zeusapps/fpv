@@ -108,7 +108,7 @@ but that was never cleanly isolated from the pin contention. Worth one bench ret
 version string in `status` instead of `version = unknown` means it worked. NMEA is entirely
 sufficient if it does not.
 
-### 5. GPSQR widget — committed and reviewed, never run
+### 5. GPSQR widget — installed and working, field-untested
 
 `radio/WIDGETS/GPSQR/main.lua` is an EdgeTX widget that shows the last received GPS position as a
 QR code scannable straight into Google Maps, and persists it to the SD card across a radio power
@@ -120,21 +120,46 @@ the whole review. The most serious finding: the QR code was drawn with no colour
 foreground and background fell back to theme variables and could render dark-on-dark. Full write-up
 in `radio/CODE_REVIEW.md`.
 
-**Nothing has been verified on the radio.** All of it is source reading and arithmetic. The
-outstanding checks are tasks 4.1–4.7 of `openspec/changes/add-gpsqr-radio-widget/tasks.md`. Three
-matter most:
+**Verified on the radio, 2026-09-03 (bench):**
 
-- **Scan it on a dark theme and a light theme.** This is the one that decides whether the colour
-  fix was a repair or insurance.
-- **Put it in a half-screen zone.** EdgeTX does not document whether a widget's LVGL coordinates
-  are relative to its zone or to the screen, and a full-screen zone cannot tell you — the origin is
-  `0, 0` either way, so both readings agree. Until this is answered, use a full-screen zone.
-- **Discover sensors on the Pavo20 outdoors.** If `GPS`, `Sats` and `Alt` do not appear, the widget
-  cannot work on that aircraft no matter how correct the code is.
+- It loads and runs, no Lua error
+- The QR scans with a phone and opens the Maps pin
+- The status word (`LIVE` / `SAVED` / age) renders alongside the code
+- A fix survives a radio power cycle and comes back marked `SAVED`
 
-And the honest limit: the widget shows the last fix *the radio received*, not where the quad came to
-rest. That gap has not been measured. Land normally, note the coordinates, pace out the error, and
-write the number down.
+**NOT verified — treat as unknown:**
+
+- **Behaviour after a real failsafe.** A clean power cycle is not the same event as telemetry
+  stopping mid-stream. Confirm the widget holds the last fix and starts counting the age up rather
+  than blanking or freezing on `LIVE`. Props off on the bench for the first pass, per
+  `pavo20-pro-ii/FAILSAFE.md`.
+- **How far the pin is from where the quad actually lands.** The widget shows the last fix *the
+  radio received* — the last one transmitted before the link died — not the resting place. The gap
+  has never been measured. Land normally, note the coordinates, pace out the error, write the
+  number down. Until then no accuracy figure is quoted anywhere, on purpose.
+- **GPS telemetry on the Pavo20.** Run Delete all sensors → Discover new sensors with the aircraft
+  powered outdoors. If `GPS`, `Sats` and `Alt` do not appear, the widget cannot work on that
+  aircraft no matter how correct the code is. It is FireFly25-only until they do.
+- **The coordinate origin, so any zone but full-screen.** EdgeTX does not document whether a
+  widget's LVGL `x`/`y` are relative to its zone or to the screen, and its own example implies the
+  screen. A full-screen zone cannot tell you — the origin is `0, 0` either way, so both readings
+  agree. Put it in a half-screen zone and look at where the QR lands. **Until then, use
+  full-screen.** If it draws at the screen corner, every `x`/`y` in `buildUI` needs `+ w.zone.x` /
+  `+ w.zone.y`. Do not add that speculatively — it breaks the full-screen case if the current
+  behaviour is already right.
+- **Square zones.** The status word was seen in the zone actually in use, which is not square. The
+  square case is the one the shipped code got wrong, so it is the one worth checking.
+- **The failed-SD-write path.** The bench install had a working `/LOGS/`, which exercises the
+  success path. Rename `/LOGS/` on the card, run with a live fix for a minute, and watch for the
+  radio stuttering.
+- **Whether the colour fix was a repair or insurance.** The scan was of the fixed version, on the
+  theme in use. Whether the shipped version would also have scanned is unknown. Set a dark theme,
+  scan the current widget, then copy `a3b2c6d`'s `main.lua` to the card and scan again on the same
+  theme. Low stakes — the fix is right either way — but "it scans" is not proof the defect was
+  real, and should not be recorded as if it were.
+
+The original `GPSQR_widget.zip` is still in `Downloads/`. The committed copy is confirmed working,
+so it can go whenever.
 
 ### 6. Delete the superseded folders
 

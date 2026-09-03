@@ -12,9 +12,14 @@ Claims about EdgeTX behaviour are cited to the EdgeTX Lua reference (luadoc.edge
 **EdgeTX 2.11**, which is the version the widget declares as its minimum. The same discipline the
 aircraft docs use for Betaflight: the API reference decides, not memory.
 
-**None of this has been verified on the radio yet.** Everything below is source reading and
-arithmetic. Tasks 4.1–4.6 of `../openspec/changes/add-gpsqr-radio-widget/tasks.md` are the
-hardware checks, and until they are done the fixes are argued, not demonstrated.
+**Bench-verified 2026-09-03, field-untested.** The fixed widget was installed on the V12 MAX and
+run. Confirmed on the radio: it loads without a Lua error, the QR scans with a phone, the status
+word renders, and a fix survives a radio power cycle and comes back marked `SAVED`.
+
+What that does *not* establish is flagged inline below and tracked in `../HANDOFF.md` item 5. In
+particular it does not settle whether fix 1 was a repair or insurance — the scan was of the
+*fixed* version, on the theme in use, with no comparison against the shipped one. Everything else
+below is still source reading and arithmetic.
 
 ## Fixed
 
@@ -38,10 +43,13 @@ The file's own header comment already asserted the correct behaviour —
 `SolidBG` continue to apply to the panel rectangle and the labels only, which was the intent.
 
 **Failing observation:** a code that renders and looks plausible on screen while a phone will not
-lock onto it. "It displays" is not evidence — only a successful scan is. Task 4.2 scans on both a
-dark and a light theme, before and after, which also settles whether this was a repair or
-insurance: if the shipped version already scanned on a dark theme, that theme's
-`COLOR_THEME_SECONDARY3` simply happens to be light.
+lock onto it. "It displays" is not evidence — only a successful scan is.
+
+**Status, 2026-09-03:** the fixed version scans, on the theme the radio was running. So the code as
+committed is good. Whether the *shipped* version would also have scanned is still unknown, and that
+is what decides repair vs insurance. It needs the paired comparison on a dark theme — new version,
+then `a3b2c6d`'s `main.lua` on the same theme. Not blocking; recorded so nobody later reads "it
+scans" as proof the defect was real.
 
 ### 2. A failed SD write retried on every frame
 
@@ -69,8 +77,9 @@ its coordinates stop changing. The one fix that matters most is exactly the one 
 retried. Keeping the flag set gives a retry every 10 s until it succeeds, which still satisfies the
 spec requirement ("does not retry the write on every frame").
 
-**Failing observation:** task 4.3 — rename `/LOGS/` on the card, run the widget with a live fix for
-a minute, and watch for the radio stuttering.
+**Failing observation:** rename `/LOGS/` on the card, run the widget with a live fix for a minute,
+and watch for the radio stuttering. Not yet done — the bench install had a working `/LOGS/`, which
+exercises the success path, not the failure path this fix is about.
 
 ### 3. Square zones showed a QR code and no status at all
 
@@ -89,7 +98,9 @@ QR shrinks to make room rather than the status being dropped.
 
 **Verification:** the arithmetic was walked across ten zone geometries. A 200×200 zone now yields
 `size = 166` with the status at y=176 (fits in 200); a 136×136 zone yields `size = 102` with the
-status at y=112 (fits in 136). Hardware check is task 4.6.
+status at y=112 (fits in 136). On the radio (2026-09-03) the status word renders alongside the
+code — but in the zone actually in use, which is not a square one, and the shipped code already
+showed the status there. **The square-zone case is still untested.** See `../HANDOFF.md` item 5.
 
 ### 4. The QR dimension had no floor
 

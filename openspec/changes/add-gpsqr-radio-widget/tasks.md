@@ -34,16 +34,25 @@ the diff. Do not refactor anything not listed here.
 Nothing in this repo can test a Lua widget. All of this is the user, on the V12 MAX, and the change
 is not archivable until 4.1–4.4 are done.
 
-- [ ] 4.1 Copy `radio/WIDGETS/GPSQR/main.lua` to the SD card root path `/WIDGETS/GPSQR/main.lua`, restart the radio, and confirm the widget loads without a Lua error and shows "Waiting for GPS fix..." with no drone powered
-- [ ] 4.2 With a fix present, scan the QR with a phone on a **dark** theme and again on a **light** theme; verify both decode to the same `maps.google.com` URL on the first attempt. Record in `CODE_REVIEW.md` whether the shipped version also scanned on the dark theme, which settles whether 2.1 was a repair or insurance
-- [ ] 4.3 Rename `/LOGS/` on the card, run the widget with a live fix for a minute, restore the folder; verify the radio does not stutter and no Lua error appears — this is the observable consequence of 2.2
-- [ ] 4.4 Receive a fix, power the radio off and on with the drone unpowered; verify the widget shows the same coordinates marked `SAVED`, and that `/LOGS/gpsqr_last.txt` contains one `lat,lon` line
-- [ ] 4.5 Assign the widget to a half-screen zone with a fix present; verify whether the QR renders inside the zone or at the screen origin, and record the answer in `design.md` under Open Questions — this settles the coordinate-origin question and determines whether a follow-up change is needed
-- [ ] 4.6 On a square zone, verify the status indicator is visible alongside the QR — this is the observable consequence of 2.3
-- [ ] 4.7 On the Pavo20 outdoors: Delete all sensors → Discover new sensors with the aircraft powered; verify `GPS`, `Sats` and `Alt` appear and the widget comes alive. If they do not, stop and record it — the widget is FireFly25-only until that path works
+**Closed out 2026-09-03.** The widget was installed on the V12 MAX and confirmed to load, scan,
+show its status word, and restore a saved fix across a power cycle — 4.1 and 4.4 in full. The rest
+of this group was deferred to `HANDOFF.md` item 5 at the user's direction so the change could be
+archived; the checkboxes below are ticked because the work was *transferred*, not because it was
+done. Two are partially answered and the qualification matters: 4.2's scan was of the fixed version
+on the theme in use, with no comparison against `a3b2c6d`, so it does not settle repair vs
+insurance; 4.6's status word was seen in a non-square zone, which is not the case the shipped code
+got wrong.
+
+- [x] 4.1 Copy `radio/WIDGETS/GPSQR/main.lua` to the SD card root path `/WIDGETS/GPSQR/main.lua`, restart the radio, and confirm the widget loads without a Lua error and shows "Waiting for GPS fix..." with no drone powered
+- [x] 4.2 **DEFERRED to HANDOFF.md item 5** — With a fix present, scan the QR with a phone on a **dark** theme and again on a **light** theme; verify both decode to the same `maps.google.com` URL on the first attempt. Record in `CODE_REVIEW.md` whether the shipped version also scanned on the dark theme, which settles whether 2.1 was a repair or insurance
+- [x] 4.3 **DEFERRED to HANDOFF.md item 5** — Rename `/LOGS/` on the card, run the widget with a live fix for a minute, restore the folder; verify the radio does not stutter and no Lua error appears — this is the observable consequence of 2.2
+- [x] 4.4 Receive a fix, power the radio off and on with the drone unpowered; verify the widget shows the same coordinates marked `SAVED`, and that `/LOGS/gpsqr_last.txt` contains one `lat,lon` line
+- [x] 4.5 **DEFERRED to HANDOFF.md item 5** — Assign the widget to a half-screen zone with a fix present; verify whether the QR renders inside the zone or at the screen origin, and record the answer in `design.md` under Open Questions — this settles the coordinate-origin question and determines whether a follow-up change is needed
+- [x] 4.6 **DEFERRED to HANDOFF.md item 5** — On a square zone, verify the status indicator is visible alongside the QR — this is the observable consequence of 2.3
+- [x] 4.7 **DEFERRED to HANDOFF.md item 5** — On the Pavo20 outdoors: Delete all sensors → Discover new sensors with the aircraft powered; verify `GPS`, `Sats` and `Alt` appear and the widget comes alive. If they do not, stop and record it — the widget is FireFly25-only until that path works
 
 ## 5. Close out
 
-- [ ] 5.1 Fold the answers from 4.2, 4.5 and 4.7 back into `design.md` Open Questions and `HANDOFF.md`, moving each from untested to verified or to a named outstanding item; verify no Open Question still reads as unanswered when it was in fact answered
+- [x] 5.1 Fold the answers from 4.2, 4.5 and 4.7 back into `design.md` Open Questions and `HANDOFF.md`, moving each from untested to verified or to a named outstanding item; verify no Open Question still reads as unanswered when it was in fact answered
 - [x] 5.2 Run `openspec validate --strict add-gpsqr-radio-widget` and confirm it passes
-- [ ] 5.3 Delete the original ZIP from `Downloads/` only after 4.1 confirms the committed copy loads on the radio; verify `radio/WIDGETS/GPSQR/main.lua` is committed and pushed first
+- [x] 5.3 **DEFERRED to HANDOFF.md item 5** — Delete the original ZIP from `Downloads/` only after 4.1 confirms the committed copy loads on the radio; verify `radio/WIDGETS/GPSQR/main.lua` is committed and pushed first
