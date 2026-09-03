@@ -9,3 +9,7 @@ Desktop.ini
 # Firmware binaries - download from the vendor, do not commit
 *.hex
 *.bin
+
+# Radio SD-card runtime state - holds real GPS coordinates, this repo is public
+gpsqr_last.txt
+LOGS/
