@@ -10,6 +10,7 @@ Written so a session with no prior context can pick this up. Read this, then
 | **Pavo20 Pro II** | Flying. Rewired and reconfigured 2026-09-01. Active work is here. |
 | **Meteor75 Pro** | Stable, documented, no outstanding work. |
 | **FireFly25** | Bare defaults capture only. Not actively worked on. |
+| **Radio (V12 MAX)** | GPSQR recovery widget added 2026-09-03, reviewed and fixed. **Not yet verified on the radio.** |
 
 ## Pavo20 Pro II — current configuration
 
@@ -57,6 +58,12 @@ This distinction matters more than usual — these configs fly real hardware.
 - **The SBUS config.** `PAVO20PRO2_SBUS_V1.txt` has never been pasted or flown.
 - **OSD altitude after arming.** It reads ground elevation (~124 m) while disarmed, which is
   expected. That it zeroes on arming was explained from source but not observed in flight.
+- **GPS telemetry reaching the radio.** Confirmed on the FireFly25. **Never checked on the
+  Pavo20.** Telemetry to the radio is a different path from the OSD — the OSD reads the FC's own
+  GPS state, while the radio needs the FC to put `GPS`, `Sats` and `Alt` into the CRSF stream and
+  the radio to have discovered those sensors. Until that is seen on this aircraft, the GPSQR
+  widget is FireFly25-only in practice.
+- **The GPSQR widget itself.** Committed and code-reviewed, never run. See below.
 
 ## Outstanding work
 
@@ -87,9 +94,12 @@ Intent: the "max altitude reached this flight" mode, and sanity checks **on**.
 
 ### 3. Seed OpenSpec
 
-`openspec/` is initialised with `config.yaml` but has no specs or changes yet. The GPS/SBUS pin
-constraint is the natural first spec — it is a rule that outlived the change that discovered it and
-would bite again on any rebuild.
+`openspec/specs/` is still empty. The first change — `add-gpsqr-radio-widget`, 2026-09-03 — carries
+a delta spec at `specs/radio/gpsqr-widget/`, which becomes the first main spec when that change is
+archived. It establishes a `radio/` vs per-aircraft path split.
+
+Still wanted on the aircraft side: the GPS/SBUS pin constraint. It is a rule that outlived the
+change that discovered it and would bite again on any rebuild.
 
 ### 4. Optional: retest the UBLOX provider
 
@@ -98,7 +108,35 @@ but that was never cleanly isolated from the pin contention. Worth one bench ret
 version string in `status` instead of `version = unknown` means it worked. NMEA is entirely
 sufficient if it does not.
 
-### 5. Delete the superseded folders
+### 5. GPSQR widget — committed and reviewed, never run
+
+`radio/WIDGETS/GPSQR/main.lua` is an EdgeTX widget that shows the last received GPS position as a
+QR code scannable straight into Google Maps, and persists it to the SD card across a radio power
+cycle. It exists because GPS Rescue can fail and, on the Pavo20, has never been tested — this is
+the backup for the backup.
+
+It was committed as shipped (`a3b2c6d`) and then fixed (`453447c`); `git diff` between the two is
+the whole review. The most serious finding: the QR code was drawn with no colours set, so both
+foreground and background fell back to theme variables and could render dark-on-dark. Full write-up
+in `radio/CODE_REVIEW.md`.
+
+**Nothing has been verified on the radio.** All of it is source reading and arithmetic. The
+outstanding checks are tasks 4.1–4.7 of `openspec/changes/add-gpsqr-radio-widget/tasks.md`. Three
+matter most:
+
+- **Scan it on a dark theme and a light theme.** This is the one that decides whether the colour
+  fix was a repair or insurance.
+- **Put it in a half-screen zone.** EdgeTX does not document whether a widget's LVGL coordinates
+  are relative to its zone or to the screen, and a full-screen zone cannot tell you — the origin is
+  `0, 0` either way, so both readings agree. Until this is answered, use a full-screen zone.
+- **Discover sensors on the Pavo20 outdoors.** If `GPS`, `Sats` and `Alt` do not appear, the widget
+  cannot work on that aircraft no matter how correct the code is.
+
+And the honest limit: the widget shows the last fix *the radio received*, not where the quad came to
+rest. That gap has not been measured. Land normally, note the coordinates, pace out the error, and
+write the number down.
+
+### 6. Delete the superseded folders
 
 `D:\Code\Meteor75`, `D:\Code\FireFly25` and `D:\Code\Pavo20Pro2` were copied into this repo and
 left in place as a fallback. Remove them once this repo is confirmed good.

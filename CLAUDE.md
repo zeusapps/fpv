@@ -11,11 +11,33 @@ with the Pavo20 Pro II.
 ## What this is
 
 Betaflight flight controller configurations, hardware notes and setup guides for a small fleet of
-FPV quads. **Not source code.** Nothing here builds, runs or has tests. The "build" is a human
-pasting a `.txt` file into the Betaflight Configurator CLI and flying the aircraft.
+FPV quads. The aircraft folders are **not source code** — nothing in them builds or has tests, and
+the "build" is a human pasting a `.txt` file into the Betaflight Configurator CLI and flying the
+aircraft.
 
-One folder per aircraft. Shared Betaflight reference in `docs/betaflight-reference.md` — read that
-before answering anything about CLI format, mode IDs, serial bitmasks or OSD position encoding.
+One exception, added 2026-09-03: `radio/WIDGETS/GPSQR/main.lua` is Lua that EdgeTX executes on the
+transmitter. It is still not buildable or testable here — there is no interpreter, no emulator and
+no harness in this repo — but it is code, and it gets reviewed as code. `npx luaparse <file>`
+catches syntax errors and nothing else; everything past that is read the API reference, walk the
+arithmetic, then verify on the radio. `radio/CODE_REVIEW.md` is the record.
+
+### Layout
+
+One folder per aircraft, plus two shared folders:
+
+- `docs/betaflight-reference.md` — read this before answering anything about CLI format, mode IDs,
+  serial bitmasks or OSD position encoding.
+- `radio/` — transmitter-side setup for the HelloRadio V12 MAX, which flies all three aircraft.
+
+**The radio/aircraft split is load-bearing.** `radio/` must never state a Betaflight setting that
+differs between aircraft; it links to the aircraft folder instead. The GPSQR widget arrived with a
+README that gave one aircraft's GPS protocol and baud as though they were universal, and they were
+the documented wrong answer for another — enough to break a GPS that currently works. The rule is
+written as a spec requirement, not just a convention: see
+`openspec/changes/add-gpsqr-radio-widget/specs/radio/gpsqr-widget/spec.md`.
+
+A setting that is genuinely identical on every aircraft (`report_cell_voltage`, say) may appear in
+`radio/`, but as a step the user applies and confirms — never as an edit to a committed `.txt`.
 
 ## The stakes
 
