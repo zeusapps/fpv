@@ -17,10 +17,15 @@
 --   TxtColor - text color                    (default: white)
 --   SolidBG  - draw the panel at all; turn off for a transparent
 --              widget that uses your theme background (default: on)
--- The QR code itself always stays black-on-white - scanners need it.
+-- Those three affect the panel and the text only. The QR code is pinned
+-- to black-on-white below and is not themeable - an unset colour falls
+-- back to a theme variable, which on a dark theme can render the code
+-- dark-on-dark and unscannable. See radio/CODE_REVIEW.md.
 --
 -- Requires: EdgeTX 2.11+ (LVGL Lua API), color screen radio
 -- Install:  copy this folder so the file is at /WIDGETS/GPSQR/main.lua
+-- Source:   version-controlled at radio/WIDGETS/GPSQR/main.lua in the FPV
+--           repo. Edit it there and copy to the card, not the other way.
 ---------------------------------------------------------------------
 
 local SENSOR        = "GPS"                          -- telemetry sensor name
@@ -29,6 +34,9 @@ local SAVE_PATH     = "/LOGS/gpsqr_last.txt"
 local REBUILD_TICKS = 500    -- rebuild QR at most every 5 s (1 tick = 10 ms)
 local SAVE_TICKS    = 1000   -- write fix to SD at most every 10 s
 local LIVE_AGE_S    = 5      -- fix younger than this counts as "LIVE"
+local MIN_QR        = 56     -- below this a phone will not lock onto the code;
+                             -- smaller zones fall back to text-only
+local TEXT_H        = 18     -- height reserved for one SMLSIZE status line
 
 local DEF_BG = (lcd and lcd.RGB) and lcd.RGB(24, 26, 30) or BLACK
 
@@ -64,9 +72,17 @@ local function saveFix(w)
   if f then
     io.write(f, string.format("%.6f,%.6f", w.lat, w.lon))
     io.close(f)
-    w.lastSave  = getTime()
     w.needsSave = false
   end
+  -- Stamp the attempt, not the success. If the open fails - no /LOGS
+  -- folder, no card, card full - leaving lastSave nil makes the rate-limit
+  -- test in poll() true forever, and poll() runs once per frame, so the
+  -- widget would hammer io.open on every refresh. A failed write now backs
+  -- off for SAVE_TICKS exactly like a successful one.
+  -- needsSave is deliberately NOT cleared on failure: a quad that has
+  -- crashed stops moving, so its coordinates stop changing, and clearing
+  -- the flag would mean that fix is never written at all.
+  w.lastSave = getTime()
 end
 
 -- poll telemetry; runs both when visible (refresh) and hidden (background)
@@ -132,14 +148,36 @@ local function buildUI(w)
 
   local data = string.format(URL_FMT, w.lat, w.lon)
 
-  if W >= H + 70 then
-    -- WIDE zone: QR left (capped so the text column keeps >= ~94 px),
-    -- short text lines on the right
-    local size = math.min(H - 2 * pad, W - 100)
-    local tx   = 2 * pad + size
+  local wide = (W >= H + 70)
+  -- WIDE: QR on the left, capped so the text column keeps >= ~94 px.
+  -- PORTRAIT / SQUARE: QR centered, with room for the status line always
+  -- reserved below it. The status is not optional - without it a fix
+  -- restored from the card is indistinguishable from a live one.
+  local size = wide and math.min(H - 2 * pad, W - 100)
+                     or math.min(W - 2 * pad, H - 2 * pad - TEXT_H - 4)
+
+  if size < MIN_QR then
+    -- Zone too small for a code a phone can lock onto. Show the numbers -
+    -- they can still be typed into a map by hand - rather than handing
+    -- lvgl.qrcode a zero or negative dimension.
+    ui[#ui + 1] = { type = "label", x = pad, y = pad, color = tc,
+                    font = SMLSIZE,
+                    text = function() return statusShort(w) end }
+    ui[#ui + 1] = { type = "label", x = pad, y = pad + TEXT_H, color = tc,
+                    font = SMLSIZE, text = string.format("%.5f", w.lat) }
+    ui[#ui + 1] = { type = "label", x = pad, y = pad + 2 * TEXT_H, color = tc,
+                    font = SMLSIZE, text = string.format("%.5f", w.lon) }
+    lvgl.build(ui)
+    w.builtData = data
+    return
+  end
+
+  if wide then
+    local tx = 2 * pad + size
     ui[#ui + 1] = { type = "qrcode", x = pad,
                     y = math.floor((H - size) / 2),
-                    w = size, h = size, data = data }
+                    w = size, h = size, data = data,
+                    color = BLACK, bgColor = WHITE }
     ui[#ui + 1] = { type = "label", x = tx, y = pad + 2,
                     color = tc, font = MIDSIZE,
                     text = function() return statusShort(w) end }
@@ -152,20 +190,14 @@ local function buildUI(w)
                       color = tc, font = SMLSIZE, text = "Scan > Maps" }
     end
   else
-    -- PORTRAIT / SQUARE zone: QR centered; status line below if it fits
-    local showText = (H - W) >= 24
-    local size = math.min(W - 2 * pad,
-                          H - 2 * pad - (showText and 22 or 0))
     local qx = math.floor((W - size) / 2)
-    local qy = showText and math.floor((H - size - 22) / 2)
-                         or math.floor((H - size) / 2)
+    local qy = math.floor((H - size - TEXT_H - 4) / 2)
     ui[#ui + 1] = { type = "qrcode", x = qx, y = qy,
-                    w = size, h = size, data = data }
-    if showText then
-      ui[#ui + 1] = { type = "label", x = qx, y = qy + size + 4,
-                      color = tc, font = SMLSIZE,
-                      text = function() return statusLine(w) end }
-    end
+                    w = size, h = size, data = data,
+                    color = BLACK, bgColor = WHITE }
+    ui[#ui + 1] = { type = "label", x = pad, y = qy + size + 4,
+                    color = tc, font = SMLSIZE,
+                    text = function() return statusLine(w) end }
   end
 
   lvgl.build(ui)
