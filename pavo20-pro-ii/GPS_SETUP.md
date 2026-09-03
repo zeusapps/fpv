@@ -878,7 +878,14 @@ So supply *level* is cleared. Ground integrity and RF are not.
 
 This quad is flown on 3S, which the 2-4S board supports and which has been flight-tested. It is not
 a factor in the GPS fault. One consequence worth remembering: `auto_profile_cell_count` selects
-**profile 1** (the "3S" tune) on a 3S pack, not profile 0.
+the profile whose declared cell count matches the pack. As the profiles stand after the 2026-09-01
+rewire that is **profile 0** (`O4Pro3S`, declaring `3`) on a 3S pack and **profile 1** (`O4Pro4S`,
+declaring `4`) on 4S.
+
+This sentence previously said a 3S pack selects profile 1. That was true when it was written, and
+the profiles have since been reordered and renamed; it was corrected on 2026-09-03 against
+`dumps/BTFL_cli_backup_PAVO20PRO2_20260903_BETAFPVG473_V3 - current.txt`. Read the profile blocks
+of the newest capture rather than trusting this paragraph if the two ever disagree again.
 
 Minor note for later: the 9 V BEC feeding the O4 has less headroom on 3S than on 4S. Near the end
 of a pack — around 3.3 V/cell, roughly 9.9 V — a 9 V regulator is running close to dropout. That is

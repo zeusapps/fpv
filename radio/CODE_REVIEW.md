@@ -16,7 +16,7 @@ aircraft docs use for Betaflight: the API reference decides, not memory.
 run. Confirmed on the radio: it loads without a Lua error, the QR scans with a phone, the status
 word renders, and a fix survives a radio power cycle and comes back marked `SAVED`.
 
-What that does *not* establish is flagged inline below and tracked in `../HANDOFF.md` item 5. In
+What that does *not* establish is flagged inline below and tracked in `../HANDOFF.md` under *GPSQR widget*. In
 particular it does not settle whether fix 1 was a repair or insurance — the scan was of the
 *fixed* version, on the theme in use, with no comparison against the shipped one. Everything else
 below is still source reading and arithmetic.
@@ -105,7 +105,7 @@ QR shrinks to make room rather than the status being dropped.
 `size = 166` with the status at y=176 (fits in 200); a 136×136 zone yields `size = 102` with the
 status at y=112 (fits in 136). On the radio (2026-09-03) the status word renders alongside the
 code — but in the zone actually in use, which is not a square one, and the shipped code already
-showed the status there. **The square-zone case is still untested.** See `../HANDOFF.md` item 5.
+showed the status there. **The square-zone case is still untested.** See `../HANDOFF.md` under *GPSQR widget*.
 
 ### 4. The QR dimension had no floor
 

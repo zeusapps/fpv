@@ -31,7 +31,7 @@ tested** (`../pavo20-pro-ii/FAILSAFE.md`), which is most of why the widget is wo
 the status word shows, and a fix survives a radio power cycle and comes back marked `SAVED`.
 Not yet exercised in the field — and "survives a power cycle" is not the same event as "survives a
 failsafe", which is telemetry stopping mid-stream rather than a clean shutdown with a fix already
-on the card. What is still unverified is listed in `../HANDOFF.md` item 5.
+on the card. What is still unverified is listed in `../HANDOFF.md` under *GPSQR widget*.
 
 ### Install
 
@@ -56,7 +56,7 @@ widget's zone. This widget uses zone-relative coordinates.
 
 At full screen the two readings are identical, because the zone origin is `0, 0`. In any smaller
 zone they are not. Until someone puts the widget in a half-screen zone and looks, use a full-screen
-zone. Written up in `../HANDOFF.md` item 5, and in the Open Questions of
+zone. Written up in `../HANDOFF.md` under *GPSQR widget*, and in the Open Questions of
 `../openspec/changes/archive/2026-09-03-add-gpsqr-radio-widget/design.md`.
 
 ### What the status words mean

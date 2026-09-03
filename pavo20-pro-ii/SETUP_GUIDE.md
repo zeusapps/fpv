@@ -109,6 +109,17 @@ This writes `acc_calibration`, which is unique to your board and airframe. **Nev
 from another quad's config**, including from the Meteor75 dumps in the neighbouring folder.
 ANGLE mode drifting is almost always a bad accelerometer calibration.
 
+**This step is required, not a formality.** The committed configs deliberately contain no
+`acc_calibration` and no `acc_trim_pitch`/`acc_trim_roll`, so pasting one leaves whatever is
+already on the board — which after a flash or a fresh board is nothing usable. There is no
+number in this repo that can stand in for doing it on the airframe in front of you: a
+calibration describes how the board physically sits, and the 2026-09-01 rewire is exactly the
+kind of work that invalidates one. A committed value would tell you only where the board sat on
+the day it was captured.
+
+Nothing warns you if you skip it. The quad arms and flies; the horizon drifts in ANGLE mode, and
+GPS Rescue gets a wrong level reference on the one flight where you need it to be right.
+
 ## 9. Bench checks — still no props
 
 1. **Motor direction:** Motors tab, spin each motor, confirm the direction matches the diagram.
@@ -172,7 +183,8 @@ on the firmware already on the quad. Nothing about the GPS fix requires new firm
    The Configurator CLI has dropped pasted lines on this quad before, which produced a very
    confusing GPS fault. Watch for any red error text as you go.
 5. The file ends with `save`, which reboots the board.
-6. Reconnect, **Setup** tab, **Calibrate Accelerometer** with the quad level.
+6. Reconnect, **Setup** tab, **Calibrate Accelerometer** with the quad level. **Required** — the
+   file carries no calibration, by design. See section 8.
 7. Connect the O4 and a battery, open the **GPS** tab, look for a satellite count.
 
 If GPS works, the job is done. Flashing is then optional and can wait.

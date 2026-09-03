@@ -105,10 +105,12 @@ set dyn_notch_q = 500
 set dyn_notch_min_hz = 150
 set gyro_lpf1_dyn_min_hz = 0
 
-# airframe levelling - YOURS, not BetaFPV's. Re-run Calibrate Accelerometer after flashing.
-set acc_trim_pitch = 5
-set acc_trim_roll = -1
-set acc_calibration = -66,3,-68,1
+# airframe levelling is DELIBERATELY ABSENT from this file. acc_calibration and the
+# acc_trim_* pair describe how the board sits in this airframe at the moment it was
+# levelled, and they are invalidated by anything that disturbs it - the 2026-09-01 rewire
+# did exactly that. diff all only writes what it names, so leaving them out means pasting
+# this file cannot overwrite a good calibration with a stale one.
+# After pasting: Configurator > Setup > Calibrate Accelerometer, quad level. Required.
 
 set mag_hardware = NONE
 set motor_idle = 950
@@ -127,9 +129,11 @@ set simplified_gyro_filter_multiplier = 120
 
 # GPS - BZ-181 on UART2. NMEA at a fixed 115200; this module never answers UBX MON-VER,
 # so UBLOX cannot complete baud detection. Do not set gps_provider = UBLOX.
+# gps_auto_baud must be OFF for the same reason, but it is not set here: OFF is the
+# firmware default on 2025.12.2 (confirmed by get, 2026-09-03), so the line did nothing.
+# The value is load-bearing; the line was not. Check it with get after any firmware change.
 set gps_set_home_point_once = ON
 set gps_provider = NMEA
-set gps_auto_baud = OFF
 set gps_auto_config = OFF
 
 # OSD - HD canvas 53x20 via MSP DisplayPort. Values below 2048 are hidden.
@@ -146,22 +150,22 @@ set osd_crosshairs_pos = 313
 set osd_ah_pos = 2086
 set osd_current_pos = 2625
 set osd_craft_name_pos = 2644
-set osd_gps_speed_pos = 2114
-set osd_gps_lon_pos = 2103
-set osd_gps_lat_pos = 2135
-set osd_gps_sats_pos = 2146
+set osd_gps_speed_pos = 2425
+set osd_gps_lon_pos = 3111
+set osd_gps_lat_pos = 3143
+set osd_gps_sats_pos = 2101
 set osd_home_dir_pos = 2424
-set osd_home_dist_pos = 2178
-set osd_altitude_pos = 3141
+set osd_home_dist_pos = 2093
+set osd_altitude_pos = 2108
 set osd_pidrate_profile_pos = 98
 set osd_warnings_pos = 14837
 set osd_avg_cell_voltage_pos = 2594
 set osd_esc_tmp_pos = 129
-set osd_core_temp_pos = 3246
+set osd_core_temp_pos = 3215
 set osd_rate_profile_name_pos = 2082
 set osd_pid_profile_name_pos = 66
 set osd_profile_name_pos = 130
-set osd_sys_vtx_temp_pos = 2210
+set osd_sys_vtx_temp_pos = 3247
 
 set debug_mode = GYRO_FILTERED
 set craft_name = Pavo20 Pro II
@@ -255,7 +259,6 @@ set i_yaw = 72
 set f_yaw = 37
 set d_max_roll = 29
 set d_max_pitch = 38
-set auto_profile_cell_count = 0
 set simplified_master_multiplier = 90
 set simplified_d_gain = 110
 set simplified_d_max_gain = 0
@@ -279,7 +282,6 @@ set rateprofile_name = Cine
 set thr_mid = 34
 set thr_expo = 40
 set thr_hover = 34
-set rates_type = ACTUAL
 set roll_rc_rate = 4
 set pitch_rc_rate = 4
 set yaw_rc_rate = 4
