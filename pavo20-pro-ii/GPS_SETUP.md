@@ -1,5 +1,68 @@
 # GPS Setup — BZGNSS BZ-181 on the Pavo20 Pro II 4S (Cube G473_V3)
 
+> ## UPDATE — 2026-09-03: this aircraft now runs UBLOX
+>
+> The rewire described below fixed more than it was credited with. The claim in the RESOLVED block
+> that this module **never answers UBX `MON-VER`** was formed *before* the rewire, while the
+> module's TX was still contended on `R1 (PA10)`. It was never re-tested afterwards. **It is
+> false.**
+>
+> Retested 2026-09-03 on the rewired aircraft: `MON-VER` is answered, auto-config completes, and
+> the aircraft holds a **3D fix on 10 satellites** at a correct position.
+>
+> ```
+> set gps_provider = UBLOX
+> set gps_auto_config = ON
+> set gps_ublox_use_galileo = ON
+> ```
+>
+> **Why UBLOX and not NMEA.** With auto-config on, Betaflight sends the module its dynamic
+> platform model — `UBLOX_MODEL_STATIONARY` while acquiring, `UBLOX_MODEL_AIRBORNE_4G` in flight
+> (`PG_RESET_TEMPLATE(gpsConfig_t, ...)`, `src/main/pg/gps.c` at 2025.12.2) — plus the nav rate and
+> a trimmed message set. Under NMEA it sends the module nothing at all, and the module runs
+> whatever the factory shipped for both cold-start and flight.
+>
+> `gps_provider` and `gps_auto_config` both equal the firmware default at 2025.12.2 and are still
+> written explicitly in the configs; the comment there says why.
+>
+> **What this does not clear.** That fix was taken on a balcony, stationary, under partial sky.
+> Fix quality in flight is still unproven, and GPS Rescue remains configured-but-untested — see
+> `FAILSAFE.md`.
+
+## If GPS stops working — the NMEA fallback
+
+Try this first, before suspecting the module or the wiring.
+
+```
+set gps_provider = NMEA
+set gps_auto_config = OFF
+save
+```
+
+Then **unplug USB and battery for about ten seconds.** A `save` reboots the flight controller
+without necessarily dropping power to the GPS module, and if auto-config had already run, the
+module has its NMEA output switched off. Every VALSET in `src/main/io/gps.c` at 2025.12.2 uses
+`UBX_VAL_LAYER_RAM`, and Betaflight never issues a CFG-CFG save, so nothing it wrote to the module
+survives a real power cycle.
+
+**Why this is the first thing to try.** UBLOX re-establishes two-way communication at every boot:
+the only exit from `GPS_STATE_DETECT_BAUD` is a parsed `MON-VER` reply (`src/main/io/gps.c:1053`),
+and there is no timeout that advances the state machine without one. So a broken FC→module
+transmit line — `T2` = `PA2` on this board, a joint made 2026-09-01 on an airframe that
+vibrates — yields no GPS at all under UBLOX. NMEA asks the FC to transmit nothing, and
+`gpsConfigureNmea()` advances out of `DETECT_BAUD` unconditionally
+(`src/main/io/gps.c:987-989`). If the module and its 5 V supply are intact, NMEA will still work
+with that line dead.
+
+**How to tell which it is.** Under UBLOX, `status` prints `version =` followed by a u-blox version
+string only when `MON-VER` was actually parsed (`src/main/cli/cli.c:4837`); `unknown` means
+detection never completed. Confirm with a satellite count in the Configurator GPS tab — do not use
+`GPS: connected`, which is meaningless here (see the table above).
+
+**This is a diagnostic fallback, not a safety net.** `allowArmingWithoutFix` defaults to `false`
+(`src/main/pg/gps_rescue_multirotor.c:53` at 2025.12.2), so a failed UBLOX detection prevents
+arming rather than permitting a launch without GPS. You lose a flight, not the aircraft.
+
 > ## RESOLVED — 2026-09-01
 >
 > **Cause:** the GPS module's TX was soldered to **R1 (PA10)**, which the board also routes to the
@@ -16,9 +79,13 @@
 > | GPS yellow (module TX) | R1 (PA10) | R2 (PA3) |
 > | GPS white (module RX) | T1 (PA9) | T2 (PA2) |
 >
-> Config: `PAVO20PRO2_ELRS_V1.txt`. GPS runs **NMEA at a fixed 115200**, auto-baud and auto-config
-> off — this module never answers UBX `MON-VER`, so the UBLOX provider cannot complete baud
-> detection. **Confirmed working with the air unit connected.**
+> Config: `PAVO20PRO2_ELRS_V1.txt`. GPS ran **NMEA at a fixed 115200**, auto-baud and auto-config
+> off. **Confirmed working with the air unit connected.**
+>
+> The reason recorded at the time — that this module never answers UBX `MON-VER`, so the UBLOX
+> provider cannot complete baud detection — was **wrong**, and was disproven on 2026-09-03; see
+> the UPDATE at the top of this file. NMEA did work. The explanation offered for why UBLOX had not
+> was the pin contention that this very rewire removed.
 >
 > This also frees R1 for its intended purpose, making the DJI Remote Controller 3 usable —
 > see `PAVO20PRO2_SBUS_V1.txt` and `BINDING_GUIDE.md`.
@@ -143,10 +210,16 @@ Which matches this quad's install exactly. Their configuration sequence:
 > (If the GPS icon is red, it needs to go outside the room to pick up signals. If there is no GPS
 > icon lighting up, make sure the connection and configuration are all correct.)
 
-**Note where this diverges from what works on this quad.** BetaFPV's recommended `AUTO` baud with
-auto-config assumes the UBLOX provider and a module that answers `MON-VER`. This BZ-181 does not,
-so following the official steps verbatim leaves the driver stuck in `DETECT_BAUD`. The working
-configuration here is NMEA at a fixed 115200 with auto-config off.
+**Note where this partly diverges from what works on this quad.** BetaFPV's steps assume the
+UBLOX provider, auto-config on, and a module that answers `MON-VER` — which, since 2026-09-03, is
+what this aircraft runs.
+
+What is still wrong is the `AUTO` baud. At 2025.12.2 `gps_auto_baud` exists in `gpsConfig_t`
+(`src/main/pg/gps.h`) and is settable from the CLI (`src/main/cli/settings.c:1137`), so `get`
+prints a value for it — but `src/main/io/gps.c` never reads it. Setting it has no effect in either
+direction. The UBLOX driver baud-scans unconditionally regardless, starting at the configured rate
+and stepping down through `gpsInitData[]`. This quad runs UBLOX with auto-config on at a fixed
+115200.
 
 The article also covers adding a magnetometer, which needs the 6-pin variant and extra soldering:
 
@@ -686,12 +759,25 @@ If you ever want to test by elimination, `resource LED_STRIP 1 NONE` then `save`
 **restore it afterwards** with `resource LED_STRIP 1 A03` plus the `timer` and `dma` lines above,
 or the strip will stay dark.
 
-### Why UBLOX cannot be used here
+### Why UBLOX could not be used here — DISPROVEN 2026-09-03
+
+> This section is kept as written. Its conclusion was wrong, and the reason it was wrong is the
+> useful part. See the UPDATE at the top of this file: the aircraft has run UBLOX since
+> 2026-09-03.
 
 The module emits UBX, so the parser would cope. The blocker is the handshake: `DETECT_BAUD` waits
 for a `MON-VER` reply, and this module never answers one. Either it does not accept UBX on its
 input port, or the FC to module direction is not delivering. Since NMEA is fully sufficient, this
 is not worth pursuing.
+
+**The second hypothesis was the right one, and it was written down and then not followed.** The
+FC→module direction was not delivering, because at the time the GPS shared `R1 (PA10)` with the O4
+air unit's SBUS output. The rewire onto `T2 (PA2)` fixed it. What went wrong was not the analysis
+but the bookkeeping: "not worth pursuing" hardened into "cannot be used", the section was given a
+present-tense heading, and the conclusion was then carried across a rewire that changed the exact
+wire the second hypothesis depended on — into two configs, two documents and two spec rationales.
+
+A claim about hardware behaviour expires when the signal path it rests on changes.
 
 ---
 

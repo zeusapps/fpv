@@ -79,6 +79,17 @@ position from thirty seconds ago or from last weekend.
 > a live fix on the model you are flying.** This is a real defect, found 2026-09-03 and not yet
 > fixed — the fix is a per-model save path. `CODE_REVIEW.md` has the detail.
 
+> **A displayed position is only as good as the fix behind it, and the widget does not check.**
+> It accepts any coordinates that are not exactly `0, 0`. A flight controller whose receiver has
+> not acquired can still send a complete, plausible, entirely wrong position — on 2026-09-03 the
+> widget showed a point in Mali while the drone sat indoors on a desk. `LIVE` means *a frame
+> arrived recently*, not *the drone knows where it is*.
+>
+> **Confirm the aircraft had a 3D fix before you trust a pin.** If the widget was running while
+> the drone had no fix, delete `/LOGS/gpsqr_last.txt` — otherwise that position comes back as
+> `SAVED` on the next power-up. Second real defect, found 2026-09-03, not yet fixed;
+> `CODE_REVIEW.md` has the mechanism and why the fix is not being guessed at.
+
 ### What the position actually is
 
 The widget shows **the last fix the radio received** — the last one transmitted before the link
@@ -293,12 +304,22 @@ the disproven hypotheses kept in `../pavo20-pro-ii/GPS_SETUP.md`.
 
 > Configuration tab: **GPS enabled**, protocol **UBLOX** (auto-baud on modern firmware). Save.
 
-Correct for the FireFly25 it was written against. **Wrong for the Pavo20 Pro II**, which is the
-aircraft the radio is most often bound to and the one where the widget matters most. Its BZ-181
-(u-blox M10) never answers a UBX `MON-VER`, so the UBLOX driver cannot leave `DETECT_BAUD`
-(`gps.c`, read at Betaflight 2025.12.2). That aircraft runs the **NMEA** provider at a fixed
-115200 with `gps_auto_baud` and `gps_auto_config` off. Following the removed advice breaks a GPS
-that currently works. Full write-up: `../pavo20-pro-ii/GPS_SETUP.md`.
+Correct for the FireFly25 it was written against, and **not safe to apply blind to any other
+aircraft**. Two reasons, neither of which depends on what any particular aircraft runs today:
+
+- **The auto-baud half does nothing.** At Betaflight 2025.12.2, `gps_auto_baud` is settable from
+  the CLI but is never read by `io/gps.c`. An instruction to turn it on cannot have the effect it
+  claims, on any aircraft in this fleet.
+- **The protocol is a per-aircraft fact.** It depends on the module, the wiring and what has
+  actually been observed on that airframe — none of which a radio-side document can know. Each
+  aircraft folder states its own, with the firmware version it was read at.
+
+This entry originally gave a third reason, specific to the Pavo20 Pro II, asserting that its
+module could not complete UBLOX detection. **That was disproven on 2026-09-03** and has been
+removed; the mistake is recorded in `../pavo20-pro-ii/GPS_SETUP.md`. It is a good illustration of
+why this rule exists: the aircraft-side value changed, and because it had been copied into
+`radio/`, the copy here went silently wrong. **For any aircraft's GPS protocol and baud, go to that
+aircraft's folder** — for the Pavo20, `../pavo20-pro-ii/GPS_SETUP.md`.
 
 **§5, "GPS Rescue".** It gave a complete rescue setup — "*Minimum satellites: 8*", "*Return
 altitude: 40 m fixed is a sane default*" — against "Betaflight 4.4/4.5". The fleet runs 2025.12.2,

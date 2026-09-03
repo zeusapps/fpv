@@ -125,6 +125,58 @@ dimension.
 
 ## Found after the review, not yet fixed
 
+### A position with no fix is displayed and saved as though it were real
+
+**Severity: high.** Missed in the original review; surfaced 2026-09-03, the first time the Pavo20
+ran the UBLOX GPS provider. The widget displayed `14.786703, -7.396605` — a point in Mali — while
+the aircraft sat indoors on a desk.
+
+`hasFix()` accepts any coordinate pair that is not `0, 0`:
+
+```lua
+local function hasFix(v)
+  return type(v) == "table" and v.lat ~= nil and v.lon ~= nil
+         and (v.lat ~= 0 or v.lon ~= 0)
+end
+```
+
+That was a complete guard under the NMEA provider, where an unacquired receiver reports zeros. It
+is not a guard at all under UBLOX. Betaflight assigns `gpsSol.llh` from the NAV-PVT frame
+unconditionally and records fix validity separately (`src/main/io/gps.c:2244-2256` at 2025.12.2):
+
+```c
+ubxHaveNewValidFix = (flags & NAV_STATUS_FIX_VALID) && (fixType == FIX_3D);
+...
+gpsSol.llh.lon = ubxRcvMsgPayload.ubxNavPvt.lon;
+gpsSol.llh.lat = ubxRcvMsgPayload.ubxNavPvt.lat;
+gpsSetFixState(ubxHaveNewValidFix);
+```
+
+`crsfFrameGps()` then transmits those coordinates to the radio with no fix check of its own
+(`src/main/telemetry/crsf.c`). So the radio receives plausible, non-zero, entirely wrong
+coordinates whenever the receiver has not acquired. At the time of the observation the aircraft
+reported 3 satellites, `3D Fix` false and PDOP 99.9.
+
+**Field consequence: worse than the shared save file below.** That one shows a real position
+belonging to *some* aircraft. This one shows a position no aircraft has ever occupied, and
+`poll()` writes it to the SD card within `SAVE_TICKS`, so it then returns after a power cycle
+marked `SAVED`. The spec requirement this violates already exists — *An absent or invalid fix SHALL
+NOT be presented as a position*, `openspec/specs/radio/gpsqr-widget/` — its rationale simply
+assumed `0, 0` was the only invalid-fix signature, which was true only for the provider in use when
+it was written.
+
+**Not fixed here.** The fix direction is known and sound: `crsfFrameGps()` writes `gpsSol.numSat`
+as the final byte of the same frame that carries the coordinates, so a satellite count does reach
+the radio, and `hasFix()` should require it to clear a threshold. What is **not** known is which
+EdgeTX telemetry sensor exposes that count on the V12 MAX. `CLAUDE.md` is explicit that this repo
+has no interpreter, emulator or harness for the widget — guessing a sensor name would ship an
+untestable change to the one tool whose entire job is telling you where to walk. Confirm the sensor
+name on the radio first.
+
+**Interim mitigation:** trust a position only if the aircraft had a 3D fix when it was sent. Delete
+`/LOGS/gpsqr_last.txt` after any session where the widget was running without a fix, or the bad
+position persists as `SAVED`.
+
 ### The saved fix is shared across all models
 
 **Severity: high.** Missed in the original review; surfaced 2026-09-03 when the widget showed a

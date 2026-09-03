@@ -16,10 +16,10 @@ number — `HANDOFF.md` under *GPS Rescue*, not "item 2".
 
 | Aircraft | Status |
 |---|---|
-| **Pavo20 Pro II** | Flying. Rewired 2026-09-01, configs reconciled to it 2026-09-03. Active work is here. |
+| **Pavo20 Pro II** | Flying. Rewired 2026-09-01; moved to the UBLOX GPS provider 2026-09-03. Active work is here. |
 | **Meteor75 Pro** | Stable, documented, no outstanding work. |
 | **FireFly25** | Bare defaults capture only. Not actively worked on. |
-| **Radio (V12 MAX)** | GPSQR widget bench-verified 2026-09-03. Field checks outstanding; one known defect accepted. |
+| **Radio (V12 MAX)** | GPSQR widget bench-verified 2026-09-03. Field checks outstanding; two known defects, one accepted, one open. |
 
 ## Pavo20 Pro II — current configuration
 
@@ -45,11 +45,21 @@ Wiring after the 2026-09-01 rewire:
 LED strip power is soldered directly to the battery input pads, not the 5 V BEC. An external
 buzzer is fitted.
 
-GPS is a **BZGNSS BZ-181** (u-blox M10) running the **NMEA** provider at a fixed **115200**, with
-`gps_auto_baud` and `gps_auto_config` off. This module never answers a UBX `MON-VER`, so the UBLOX
-provider cannot complete baud detection. Do not "fix" this by setting `gps_provider = UBLOX`.
-`gps_auto_baud` is off by *default* on this firmware and so does not appear in the config file; the
-value is load-bearing, the line was not.
+GPS is a **BZGNSS BZ-181** (u-blox M10) running the **UBLOX** provider with `gps_auto_config = ON`
+and `gps_ublox_use_galileo = ON`, since 2026-09-03.
+
+It ran NMEA until then, on the belief that this module never answers a UBX `MON-VER`. **That was
+false.** The belief was formed before the 2026-09-01 rewire, while the module's TX was contended on
+`R1 (PA10)` with the O4 air unit's SBUS output, and it was never re-tested afterwards. Retested
+2026-09-03: `MON-VER` is answered, auto-config completes, 3D fix on 10 satellites.
+
+`gps_provider` and `gps_auto_config` both equal the 2025.12.2 firmware default and are written
+explicitly in the configs anyway — see the comment there, and
+`openspec/specs/pavo20-pro-ii/gps-provider/`.
+
+**NMEA remains the recovery path, not a rejected option.** UBLOX needs the FC→module TX line alive
+at every boot; NMEA needs nothing from the FC. `pavo20-pro-ii/GPS_SETUP.md` has the fallback lines
+and why.
 
 **The committed configs carry no accelerometer calibration**, deliberately, so pasting one leaves
 the board's own calibration alone. A paste onto a flashed or fresh board **must** be followed by
@@ -64,31 +74,30 @@ This distinction matters more than usual — these configs fly real hardware.
 - ELRS config applied, saved, and flown (2026-09-02, on 4S)
 - The rewire is in saved config, not just in a file — confirmed against the 2026-09-03 capture
 - GPS acquires and reports data with the O4 air unit connected — the original fault is fixed
+- UBLOX provider works (2026-09-03): `MON-VER` answered, auto-config completed
+- Outdoor 3D fix, 10 satellites, correct position (2026-09-03). Stationary, partial sky
+- `PAVO20PRO2_ELRS_V1.txt` round-trips: pasted and re-captured 2026-09-03, every `set` line and
+  every `resource` / `timer` / `dma` / `feature` / `serial` / `aux` directive matched, with
+  `acc_calibration` on the board and absent from the file as designed
 - LED strip works on its new pin (PA9); buzzer works on battery
 - Motors, arming, modes all behaving
 
 **NOT verified — treat as unknown:**
 
-- **First outdoor cold-start GPS fix.** The last capture showed 4 satellites, no fix, and empty
-  ephemeris. Whether it achieves and holds a 3D fix in the field has not been confirmed.
+- **GPS fix quality in flight.** The 2026-09-03 fix was stationary, on a balcony, under partial
+  sky. Whether it holds a fix while moving, in open field, with motors running and the O4
+  transmitting, is unconfirmed. Do not read the balcony result as clearing GPS Rescue.
 - **GPS Rescue.** Configured in a file but never applied and never tested. See below.
 - **The SBUS config.** `PAVO20PRO2_SBUS_V1.txt` has never been pasted or flown. It was edited on
   2026-09-03 alongside the ELRS config because it carried the same stale calibration; that changed
   nothing about its status.
-- **The reconciled configs round-tripping.** The 2026-09-03 edits were verified by comparison
-  against the capture, with no aircraft involved — every `set` line in `PAVO20PRO2_ELRS_V1.txt` now
-  matches the aircraft except the deliberately absent `acc_calibration`. Nobody has pasted the
-  edited file and re-captured. The residual risk is an edit wrong in a way only a paste reveals,
-  such as a line the CLI rejects. Next time it is pasted for any reason, take a fresh `diff all`
-  and compare.
 - **OSD altitude after arming.** It reads ground elevation (~124 m) while disarmed, which is
   expected. That it zeroes on arming was explained from source but not observed in flight.
-- **GPS telemetry reaching the radio — almost certainly working, one check outstanding.** The
-  GPSQR widget displayed a real position while bound to the Pavo20, which it cannot do unless the
-  `GPS` sensor is in the CRSF stream carrying non-zero coordinates. The caveat is that the widget's
-  save file is shared across models, so a `SAVED` position on the Pavo model may belong to another
-  aircraft. Five seconds to settle: bind to the Pavo outdoors and check the status word reads
-  `LIVE` or an age.
+- **GPS telemetry reaching the radio.** The widget has displayed a real position while bound to
+  the Pavo20, which needs the `GPS` sensor in the CRSF stream. `/LOGS/gpsqr_last.txt` has since
+  been deleted, so a `SAVED` position can no longer be another model's — any position the widget
+  now shows on this model is this model's. Confirm the status word reads `LIVE` or an age once,
+  and this is closed.
 
 ## Outstanding work
 
@@ -141,6 +150,21 @@ Still unknown:
 - **The failed-SD-write path.** Rename `/LOGS/` on the card, run with a live fix for a minute, and
   watch for the radio stuttering.
 
+**Open defect, found 2026-09-03: a position with no fix is displayed and saved as though real.**
+`hasFix()` in `main.lua` guards only against coordinates of `0, 0`. That was the whole no-fix
+signature under NMEA. Under UBLOX it is not: Betaflight assigns `gpsSol.llh` from NAV-PVT
+unconditionally and records fix validity separately (`src/main/io/gps.c:2244-2256`), and
+`crsfFrameGps()` transmits those coordinates with no fix check of its own
+(`src/main/telemetry/crsf.c`). So a receiver with no fix sends the radio plausible, non-zero,
+entirely wrong coordinates — observed as `14.786703, -7.396605`, a point in Mali, while the
+aircraft sat indoors with 3 satellites and `3D Fix` false. The widget displayed it and wrote it to
+the SD card.
+
+The fix direction is known: the same CRSF frame carries `gpsSol.numSat` as its final byte, so a
+satellite count does reach the radio. Which EdgeTX sensor exposes it on the V12 MAX has not been
+checked, and must not be guessed — there is no interpreter or emulator in this repo. Full entry in
+`radio/CODE_REVIEW.md`.
+
 **Accepted defect: the save file is shared across models.** `SAVE_PATH = "/LOGS/gpsqr_last.txt"` is
 one file for the whole radio, so switching models shows the previous model's position marked
 `SAVED` with nothing saying which aircraft it belongs to. For a tool whose only job is telling you
@@ -162,14 +186,7 @@ to do is assume it is gone because the current files look clean.
 Keep the habit that caught it: `git grep <the id>` across tracked files before committing anything
 captured off the aircraft.
 
-### 4. Optional: retest the UBLOX provider
-
-The FC→module TX path now runs through a new solder joint on T2. UBLOX failed before the rewire,
-but that was never cleanly isolated from the pin contention. Worth one bench retest — a real
-version string in `status` instead of `version = unknown` means it worked. NMEA is entirely
-sufficient if it does not.
-
-### 5. Known gap: the rest of the fleet still commits calibration
+### 4. Known gap: the rest of the fleet still commits calibration
 
 `M75_hello_radio_v12.txt`, `M75_PRO_CLAUDE_CODE_V1.txt`, `M75_PRO_RADIOMASTER_POCKET_V1.txt` and
 the FireFly25 defaults capture all carry `acc_calibration` — the defect the Pavo20 configs were
@@ -177,7 +194,7 @@ just cleaned of. The Meteor75 is recorded as stable and was not touched on the s
 finding from another aircraft. Promoting the requirement to a fleet-wide capability is the natural
 follow-up if the Pavo20 change proves out.
 
-### 6. Delete the superseded folders
+### 5. Delete the superseded folders
 
 `D:\Code\Meteor75`, `D:\Code\FireFly25` and `D:\Code\Pavo20Pro2` were copied into this repo and
 left in place as a fallback. Remove them once this repo is confirmed good. The original
@@ -216,6 +233,27 @@ that value is.** `gps_auto_baud` and `rates_type` both vanished from the Pavo20 
 showed `OFF` and `ACTUAL`, matching intent. The dangerous reading is the other one: a line dropped
 from a chunked paste also disappears from the next diff and looks identical. Only `get`
 distinguishes them, and it prints the allowed values too.
+
+This is not hypothetical: `gps_provider` and `gps_auto_config` are the only two lines of
+`PAVO20PRO2_ELRS_V1.txt` that do not appear in the 2026-09-03 capture, because both equal the
+2025.12.2 default. They are pinned in the config anyway, precisely so a reader sees the choice.
+
+**`get` printing a value proves a setting is settable, not that anything reads it.** `gps_auto_baud`
+was recorded here as load-bearing as a *value* and inert only as a *line*. Both halves were wrong.
+At 2025.12.2 the field exists in `gpsConfig_t` (`src/main/pg/gps.h`) and is settable from the CLI
+(`src/main/cli/settings.c:1137`) — hence the `OFF` from `get` — but `src/main/io/gps.c` never reads
+it, and the UBLOX driver baud-scans unconditionally either way. **The value is inert too.** Only
+the firmware source separates a live default from a dead one; `get` cannot make that distinction
+at all.
+
+**A claim about hardware behaviour expires when the signal path it rests on changes.** "This module
+never answers `MON-VER`" was true as recorded, on the wiring in place when it was recorded. The
+2026-09-01 rewire moved the exact wire the claim depended on, and nobody re-tested — so it was
+carried across unchanged into two configs, two documents and two spec rationales, hardening from
+"not worth pursuing" into "do not set `gps_provider = UBLOX`". It survived four days and six files
+before a single retest disproved it. `GPS_SETUP.md` even named the correct cause as its second
+hypothesis and then dropped it. When wiring, pads or firmware change, list what was concluded under
+the old arrangement and re-check it.
 
 **Accelerometer calibration goes stale within a single aircraft** — not just between aircraft,
 which is the rule everyone knows. Anything that disturbs the board invalidates it, nothing in a

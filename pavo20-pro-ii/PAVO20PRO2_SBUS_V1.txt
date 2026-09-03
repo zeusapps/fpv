@@ -1,7 +1,7 @@
 # Pavo20 Pro II 4S (Cube G473_V3) - SBUS / DJI Remote Controller 3
 #
 # Base:  BetaFPV BF2025.12.5 Cube G473_30A Pavo20 Pro II ELRS 20260812
-# Adds:  GPS on UART2 (BZGNSS BZ-181, NMEA 115200), this airframe's AUX layout,
+# Adds:  GPS on UART2 (BZGNSS BZ-181, UBLOX + auto-config), this airframe's AUX layout,
 #        OSD layout with GPS + O4 VTX temperature, Cine/Base/Scale-70 rate profiles
 #
 # REQUIRES the rewire described in GPS_SETUP.md:
@@ -127,14 +127,26 @@ set small_angle = 180
 set pid_process_denom = 2
 set simplified_gyro_filter_multiplier = 120
 
-# GPS - BZ-181 on UART2. NMEA at a fixed 115200; this module never answers UBX MON-VER,
-# so UBLOX cannot complete baud detection. Do not set gps_provider = UBLOX.
-# gps_auto_baud must be OFF for the same reason, but it is not set here: OFF is the
-# firmware default on 2025.12.2 (confirmed by get, 2026-09-03), so the line did nothing.
-# The value is load-bearing; the line was not. Check it with get after any firmware change.
+# GPS - BZ-181 on UART2. UBLOX with auto-config, Galileo on. Verified on the aircraft
+# 2026-09-03: MON-VER answered, auto-config completed, 3D fix on 10 satellites.
+#
+# gps_provider and gps_auto_config BOTH equal the 2025.12.2 firmware default
+# (pg/gps.c: .provider = GPS_UBLOX, .autoConfig = GPS_AUTOCONFIG_ON). They are pinned
+# here deliberately: they decide whether the aircraft has a GPS at all, and a default
+# never appears in diff all, so their absence would look identical to a line dropped by
+# a chunked paste. Re-check both against pg/gps.c after any firmware change.
+#
+# UBLOX needs the FC->module TX line (T2 = PA2) alive at every boot - the only exit from
+# DETECT_BAUD is a parsed MON-VER reply (gps.c:1053), with no timeout that advances
+# without one. If GPS ever stops after a hard landing, the fallback is NMEA at a fixed
+# 115200, which needs nothing from the FC. See GPS_SETUP.md.
+#
+# gps_auto_baud is NOT set here and must not be re-added: at 2025.12.2 io/gps.c never
+# reads it. It is settable, so get prints a value, but nothing acts on that value.
 set gps_set_home_point_once = ON
-set gps_provider = NMEA
-set gps_auto_config = OFF
+set gps_provider = UBLOX
+set gps_auto_config = ON
+set gps_ublox_use_galileo = ON
 
 # OSD - HD canvas 53x20 via MSP DisplayPort. Values below 2048 are hidden.
 set osd_rssi_dbm_alarm = -98
