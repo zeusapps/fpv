@@ -12,7 +12,7 @@ configuration backups and tuned variants.
 - **Video:** DJI O4 Air Unit Pro on **UART4**, MSP DisplayPort (no analog VTX, no Betaflight OSD chip)
 - **Radio:** HelloRadio V12 MAX with ExpressLRS, CRSF protocol
 - **Board target:** `BETAFPVG473_V3` (4S / Cube G4 30A variant), manufacturer `BEFH`, STM32G474
-- **GPS:** BZGNSS BZ-181 (u-blox M10) on UART1 — see `GPS_SETUP.md`
+- **GPS:** BZGNSS BZ-181 (u-blox M10) on **UART2** — see `GPS_SETUP.md`
 - **Firmware:** Betaflight 2025.12.2, MSP API 1.47
 - **Tune goal:** cinematic/smooth — clean video over raw stick response
 
@@ -25,13 +25,16 @@ configuration backups and tuned variants.
 - `GPS_SETUP.md` — BZ-181 GPS wiring, config and diagnosis
 - `PAVO20PRO2_ELRS_V1.txt` — flight config, ELRS / HelloRadio V12 MAX
 - `PAVO20PRO2_SBUS_V1.txt` — flight config, SBUS / DJI Remote Controller 3
-- `dumps/` — CLI dumps. Keep the untouched factory dump here, named with the date it was taken.
+- `dumps/` — raw `diff all` captures, named with the date taken and a suffix saying what the
+  state was: ` - original` (factory), ` - pre-rewire`, ` - current` (what is flying now).
 
 Both V1 configs are built on BetaFPV's BF2025.12.5 stock dump and **require the GPS/LED rewire**
 described in `GPS_SETUP.md`. They differ only in the `serial` block and `serialrx_provider`.
 
 Naming convention (matching the Meteor75 repo): tuned variants go in the repo root as
-`PAVO20PRO2_<purpose>_V<n>.txt`; raw factory dumps go in `dumps/` with ` - original` in the name.
+`PAVO20PRO2_<purpose>_V<n>.txt`; raw captures go in `dumps/` as
+`BTFL_cli_backup_PAVO20PRO2_<YYYYMMDD>_<BOARDNAME> - <state>.txt`. Exactly one carries
+` - current`; retitle the previous one when a new capture replaces it.
 
 ## Betaflight CLI Config Format
 

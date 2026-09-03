@@ -12,7 +12,7 @@ The 3S variant is documented below for reference only — do not apply its setti
 | Betaflight target | `BETAFPVG473_V3` |
 | Manufacturer ID | `BEFH` |
 | MCU | STM32G474 |
-| MCU ID | `002900133235510935303333` |
+| MCU ID | redacted — per-board serial, read it with `version` in the CLI |
 | Firmware | Betaflight 2025.12.2 (Mar 12 2026), MSP API 1.47 |
 | Gyro | ICM42688P (target also supports BMI270 / ICM42622P / LSM6DSK320X) |
 | Baro | BMP280 / DPS310 on I2C1 |

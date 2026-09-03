@@ -1,4 +1,4 @@
-# Handoff — state of the repo as of 2026-09-02
+# Handoff — state of the repo as of 2026-09-03
 
 Written so a session with no prior context can pick this up. Read this, then
 `docs/betaflight-reference.md`, then the folder for whichever aircraft you are working on.
@@ -10,7 +10,7 @@ Written so a session with no prior context can pick this up. Read this, then
 | **Pavo20 Pro II** | Flying. Rewired and reconfigured 2026-09-01. Active work is here. |
 | **Meteor75 Pro** | Stable, documented, no outstanding work. |
 | **FireFly25** | Bare defaults capture only. Not actively worked on. |
-| **Radio (V12 MAX)** | GPSQR recovery widget added 2026-09-03, reviewed and fixed. **Not yet verified on the radio.** |
+| **Radio (V12 MAX)** | GPSQR recovery widget added 2026-09-03, reviewed and fixed. Bench-verified; **field-untested**, and it has one known defect (below). |
 
 ## Pavo20 Pro II — current configuration
 
@@ -45,6 +45,11 @@ This distinction matters more than usual — these configs fly real hardware.
 **Verified on the aircraft:**
 
 - ELRS config applied, saved, and flown (2026-09-02, on 4S)
+- **The rewire is in saved config, not just in a file.** The 2026-09-03 `diff all` shows
+  `resource LED_STRIP 1 A09`, `timer A09 AF6`, `dma pin A09 8`, `resource SERIAL_TX 1 NONE`,
+  and `serial UART1 0` / `UART2 2` / `UART3 64`. GPS is on UART2 and off the O4's SBUS pin.
+- `gps_auto_baud = OFF` and `rates_type = ACTUAL` confirmed by `get` on 2026-09-03. Both are
+  absent from the dump because they equal the firmware default, not because a paste dropped them
 - GPS acquires and reports data with the O4 air unit connected — the original fault is fixed
 - LED strip works on its new pin (PA9)
 - Buzzer works on battery
@@ -70,11 +75,30 @@ This distinction matters more than usual — these configs fly real hardware.
 
 ## Outstanding work
 
-### 1. Fresh `diff all` baseline
+### 1. Fresh `diff all` baseline — done 2026-09-03
 
-The dump in `pavo20-pro-ii/dumps/` is the **pre-rewire** state. Capture a new one from the flying
-aircraft and save it alongside, named with the date. Redact `mcu_id` before committing — this repo
-is public.
+`dumps/BTFL_cli_backup_PAVO20PRO2_20260903_BETAFPVG473_V3 - current.txt`, captured from the flying
+aircraft, `mcu_id` redacted. The old capture was retitled ` - pre-rewire` so ` - current` keeps
+meaning "this is what is flying".
+
+**What it turned up: `PAVO20PRO2_ELRS_V1.txt` no longer matches the aircraft.** Three differences,
+none of them a fault, all of them making the committed config a poor thing to re-paste:
+
+- **`acc_calibration`** is `-66,3,-68,1` in the file, `-37,-87,-45,1` on the aircraft. The aircraft
+  value is the post-rewire re-level and is the authoritative one. `acc_trim_pitch`/`acc_trim_roll`
+  were cleared to default by the same re-level and are still set in the file.
+- **The OSD layout was rearranged.** Eight elements moved — `gps_sats`, `home_dist`, `gps_speed`,
+  `gps_lat`, `gps_lon`, `altitude`, `core_temp`, `sys_vtx_temp`. All eight still have profile bit 1
+  set, so nothing is hidden; the file just describes a layout that is no longer on the aircraft.
+- **Profile selection.** The file ends selecting `profile 0` (`O4Pro3S`) and `rateprofile 0`
+  (`Cine`); the aircraft is on `profile 1` (`O4Pro4S`) and `rateprofile 1` (`Base`), which is
+  correct for the 4S packs it is being flown on. Re-pasting the file would silently move it to the
+  3S tune.
+
+Two lines in the file are simply redundant — `set gps_auto_baud = OFF` and `set rates_type = ACTUAL`
+both match the firmware default, confirmed by `get` on 2026-09-03.
+
+Reconciling the file with the aircraft is its own piece of work and has not been done.
 
 ### 2. GPS Rescue — configured, untested, do not trust yet
 
@@ -163,18 +187,38 @@ in `radio/CODE_REVIEW.md`.
   It stays worth having precisely because the theme changed by itself during the reinstall — the
   variable the shipped code depended on is one that moves without being asked.
 
-- **New finding, not yet acted on: the save file is shared across models.**
+- **Known defect, deliberately not being fixed: the save file is shared across models.**
   `SAVE_PATH = "/LOGS/gpsqr_last.txt"` is one file for the whole radio. Switch models and the
   widget shows the previous model's last position, marked `SAVED`, with nothing indicating it
   belongs to a different aircraft. For a tool whose entire job is telling you where to walk, that
   is a wrong-answer-with-confidence failure mode, and it is worse than showing nothing. A per-model
-  path — the model name in the filename — would fix it. Not attempted here; it is a change of its
-  own, and the widget is in service.
+  path — the model name in the filename — would fix it.
+
+  **Decided on 2026-09-03 not to do that**, in favour of capturing the Pavo20 baseline first. The
+  interim mitigation stands and is the operating rule until someone revisits it: trust `LIVE` or an
+  age, and treat `SAVED` as "some aircraft's last position" rather than this one's. It is written up
+  in `radio/README.md`. Reopen this if the widget is ever relied on across more than one model in a
+  session.
 
 The original `GPSQR_widget.zip` is still in `Downloads/`. The committed copy is confirmed working,
 so it can go whenever.
 
-### 6. Delete the superseded folders
+### 6. The MCU ID is still in git history
+
+`mcu_id` was redacted out of `pavo20-pro-ii/HARDWARE.md` on 2026-09-03, but it was committed in
+plain text in `20b4f45` and is still reachable there. The working tree is clean — `git grep` finds
+nothing — and every dump in `dumps/` was redacted before it landed.
+
+Whether that is worth acting on is a judgement call nobody has made yet. It is a per-board hardware
+serial, not a credential: it identifies this flight controller and cannot be used to reach it. The
+options are to leave it, or to rewrite history — which on a public repo means force-pushing and
+breaking every existing clone and any fork. Leaving it is defensible. The thing not to do is assume
+it is gone because the current files look clean.
+
+Worth keeping the habit that caught it: `git grep <the id>` across tracked files before committing
+anything captured off the aircraft.
+
+### 7. Delete the superseded folders
 
 `D:\Code\Meteor75`, `D:\Code\FireFly25` and `D:\Code\Pavo20Pro2` were copied into this repo and
 left in place as a fallback. Remove them once this repo is confirmed good.
