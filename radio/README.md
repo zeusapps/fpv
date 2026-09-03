@@ -55,8 +55,9 @@ LVGL widget example offsets its labels by `wgt.zone.x` — implying the parent i
 widget's zone. This widget uses zone-relative coordinates.
 
 At full screen the two readings are identical, because the zone origin is `0, 0`. In any smaller
-zone they are not. Until someone puts the widget in a half-screen zone and looks
-(`../openspec/changes/add-gpsqr-radio-widget/design.md`, Open Questions), use a full-screen zone.
+zone they are not. Until someone puts the widget in a half-screen zone and looks, use a full-screen
+zone. Written up in `../HANDOFF.md` item 5, and in the Open Questions of
+`../openspec/changes/archive/2026-09-03-add-gpsqr-radio-widget/design.md`.
 
 ### What the status words mean
 
@@ -298,5 +299,5 @@ procedures in one repo is how someone ends up flying the wrong one. `../pavo20-p
 is the single source, and it is honest about the fact that none of it has been tested in the air.
 
 The rule this follows is written down as a requirement, so it does not erode:
-`../openspec/changes/add-gpsqr-radio-widget/specs/radio/gpsqr-widget/spec.md` — "Radio-side
+`../openspec/specs/radio/gpsqr-widget/spec.md` — "Radio-side
 documentation SHALL NOT restate per-aircraft flight controller settings".

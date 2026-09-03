@@ -34,7 +34,7 @@ differs between aircraft; it links to the aircraft folder instead. The GPSQR wid
 README that gave one aircraft's GPS protocol and baud as though they were universal, and they were
 the documented wrong answer for another — enough to break a GPS that currently works. The rule is
 written as a spec requirement, not just a convention: see
-`openspec/changes/add-gpsqr-radio-widget/specs/radio/gpsqr-widget/spec.md`.
+`openspec/specs/radio/gpsqr-widget/spec.md`.
 
 A setting that is genuinely identical on every aircraft (`report_cell_voltage`, say) may appear in
 `radio/`, but as a step the user applies and confirms — never as an edit to a committed `.txt`.

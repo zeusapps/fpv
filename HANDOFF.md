@@ -94,9 +94,9 @@ Intent: the "max altitude reached this flight" mode, and sanity checks **on**.
 
 ### 3. Seed OpenSpec
 
-`openspec/specs/` is still empty. The first change — `add-gpsqr-radio-widget`, 2026-09-03 — carries
-a delta spec at `specs/radio/gpsqr-widget/`, which becomes the first main spec when that change is
-archived. It establishes a `radio/` vs per-aircraft path split.
+Seeded. `openspec/specs/radio/gpsqr-widget/spec.md` is the repo's first spec, 7 requirements,
+archived from `add-gpsqr-radio-widget` on 2026-09-03. The path establishes a `radio/` vs
+per-aircraft split.
 
 Still wanted on the aircraft side: the GPS/SBUS pin constraint. It is a rule that outlived the
 change that discovered it and would bite again on any rebuild.
