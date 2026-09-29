@@ -87,7 +87,9 @@ This distinction matters more than usual — these configs fly real hardware.
 - **GPS fix quality in flight.** The 2026-09-03 fix was stationary, on a balcony, under partial
   sky. Whether it holds a fix while moving, in open field, with motors running and the O4
   transmitting, is unconfirmed. Do not read the balcony result as clearing GPS Rescue.
-- **GPS Rescue.** Configured in a file but never applied and never tested. See below.
+- **GPS Rescue.** Block 1 (tuning) is pasted; block 2 (the arming line) is not, so the aircraft
+  is still on `DROP`. One field attempt exists, on 2026-09-03, and it produced no log — nothing is
+  known about whether a rescue can fly this aircraft. See below.
 - **The SBUS config.** `PAVO20PRO2_SBUS_V1.txt` has never been pasted or flown. It was edited on
   2026-09-03 alongside the ELRS config because it carried the same stale calibration; that changed
   nothing about its status.
@@ -103,22 +105,122 @@ This distinction matters more than usual — these configs fly real hardware.
 
 ### 1. GPS Rescue — configured, untested, do not trust yet
 
-`pavo20-pro-ii/PAVO20PRO2_FAILSAFE_GPS_RESCUE.txt` is written but has not been pasted.
+The config is now **two files**, split 2026-09-03 because the halves carry different risk:
+
+- `pavo20-pro-ii/PAVO20PRO2_GPS_RESCUE_TUNING.txt` — the rescue parameters. Touches no failsafe
+  setting. **Safe to paste now, and should be pasted before any switch test** — an unconfigured
+  board runs the firmware defaults, and `ascend_rate` defaults to `750` cm/s, a 7.5 m/s climb
+  demand this airframe cannot meet.
+- `pavo20-pro-ii/PAVO20PRO2_FAILSAFE_GPS_RESCUE.txt` — one line, `failsafe_procedure = GPS-RESCUE`.
+  **Not to be pasted until the switch test in `FAILSAFE.md` has passed.**
+
+**Block 1 is pasted and verified (2026-09-03); block 2 is not.** A `diff` returned the five
+`gps_rescue_*` lines that differ from default — `ascend_rate`, `descend_rate`, `ground_speed`,
+`descent_dist`, `return_alt` — and correctly omitted the six that equal it. `failsafe_procedure` is
+absent, so it remains at the 2025.12.2 default of `DROP_IT` (`src/main/flight/failsafe.c:78`): the
+aircraft cuts motors and falls on signal loss. That is the intended state until the rescue is
+proven.
 
 The user chose GPS Rescue over DROP after being told the trade-offs. It is the only failsafe that
 keeps motors running under power, so its failure mode is a flyaway rather than a broken quad.
 `pavo20-pro-ii/FAILSAFE.md` has the full testing procedure — switch-testing in a large open field
 at 40–60 m before it is trusted as a failsafe.
 
-Two settings still need values. They are lookups whose options vary by firmware version, so read
-them off the aircraft rather than guessing:
+**Resolved 2026-09-03: the CH10 return-to-home switch now reaches Betaflight.** AUX 6 flips on the
+Receiver tab, and `aux 6 46 5 1700 2100 0 0` is applied and confirmed in the saved config (GPS
+Rescue is permanent box ID 46).
 
-```
-get gps_rescue_alt_mode
-get gps_rescue_sanity_checks
-```
+The cause was the ELRS switch mode. The radio runs `333Hz Full`, a Full-Resolution rate, and was
+set to Switch Mode **`8ch`**, which at ExpressLRS 3.5.6 packs only `channelData[0..3]` and
+`channelData[5..8]` — CH1–4 and CH6–9. CH10 was never transmitted. Settled on **`12ch Mixed`**,
+which alternates the high group between `channelData[5..8]` and `channelData[9..12]`: CH1–4 stay at
+the full 333Hz, CH5 stays a 1-bit every-packet channel, and CH6–13 arrive at ~166Hz. `16ch Rate/2`
+was tried first and also worked, but it halves the stick rate as well and buys only CH14–16, which
+this aircraft does not use. Per-mode channel map, read off `src/lib/OTA/OTA.cpp` at tag 3.5.6, is
+in `radio/README.md` under *What each Full-Res switch mode actually transmits*.
 
-Intent: the "max altitude reached this flight" mode, and sanity checks **on**.
+**`12ch Mixed` forces CH5 to two positions**, because the receiver rebuilds it with
+`channelData[4] = BIT_to_CRSF(ota8->rc.ch4)` (`UnpackChannelData8ch`, the `else` branch). That is
+safe here and was checked: channel 0 is used by `aux 0 0 0 1700 2100` — ARM — and by nothing else.
+Every other `aux` and both `adjrange` lines sit on channels 1–4. **Do not put a 3-position or
+analogue source on CH5 while this mode is set**; it will collapse to two states with no error.
+
+**Ruled out by measurement along the way, so do not re-check:** the EdgeTX mixer (channel monitor
+showed CH10 swinging −100/+100), the module channel range (CH1–CH16), and `max_aux_channels`
+(reads `14`, so `rxChannelCount = MIN(14 + 4, 16) = 16`).
+
+**The config file is now complete.** Both remaining lookups were read off the aircraft on
+2026-09-03 and both already held the right value — `gps_rescue_alt_mode = MAX_ALT` and
+`gps_rescue_sanity_checks = RESCUE_SANITY_FS_ONLY`, each the 2025.12.2 firmware default, now pinned
+explicitly in `PAVO20PRO2_GPS_RESCUE_TUNING.txt`.
+
+**First field trigger, 2026-09-03: the quad disarmed and dropped.**
+
+*First diagnosis, and it was wrong — kept because the branch it describes is real and will be
+mistaken for a fault the next time someone triggers close in.* Within 5 m of home *and* below 4 m
+altitude a rescue hits `RESCUE_ABORT` (`gps_rescue_multirotor.c:725-727`; the 4 m is
+`isBelowLandingAltitude()` against `ap_landing_altitude_m`, default `4`), which disarms
+deliberately and sets `ARMING_DISABLED_ARM_SWITCH`, so the arm switch must be cycled to re-arm.
+That is correct behaviour, not a fault — but it is not what happened here.
+
+**Corrected: the drop was NOT the close-range abort.** It was inferred from an earlier remark
+about testing "close in" and never checked against what was actually flown. The attempt was at
+**20–30 m with ~26 satellites**, well beyond both the 5 m abort and `gps_rescue_min_start_dist`,
+so it took the normal rescue path and still came down.
+
+**What the attempt did prove:** the switch reaches the rescue state machine; **home was set**,
+since a missing home point takes the `RESCUE_NO_HOME_POINT` branch which under `FS_ONLY` hovers for
+20 s rather than disarming; and GPS had a fix with ≥8 sats, since `allow_arming_without_fix = OFF`
+with `min_sats = 8` would otherwise have blocked arming (`fc/core.c:400-407`). Prerequisites 1 and
+2 in `FAILSAFE.md` are effectively cleared.
+
+**What it did not prove, and cannot:** anything about whether the rescue can fly this aircraft.
+Nothing was logged, so the phase, the failure code, and whether the motors stopped in the air or on
+impact are all unrecoverable from recollection, and each points at a different cause. See the flash
+note below — part of it may yet be recoverable from the chip.
+
+**Why nothing was logged — established on the aircraft 2026-09-20.** Not a missing feature flag.
+`blackbox_device` reads `SPIFLASH`, and there is no `feature BLACKBOX` at 2025.12.2 to be missing:
+it appears in none of the three lists `feature` prints, the signature of a feature removed from the
+build. **Logging was enabled the whole time.** The flash was simply **full** — `flash_info` returns
+`usedSize` equal to `totalSize` — so there was nowhere to write. Erase before every attempt. This
+failure is completely silent: nothing warns you, and you land believing you have a log.
+
+**The flash is 16 MB, not 2 MB.** `HARDWARE.md` called it an M25P16 on SPI3 until 2026-09-20.
+`flash_info` reports `totalSize=16777216` and JEDEC `0x852018` — a different manufacturer and
+eight times the capacity. Any sizing argument made against 2 MB was wrong by that factor.
+
+**Unread, and worth reading before it is destroyed:** the flash is full, so it holds logs from
+earlier flights. Whether the newest covers 2026-09-03 is unknown. Download it before erasing — even
+with `debug_mode` on `GYRO_FILTERED` and no `RTH` fields, an altitude and motor-output trace would
+distinguish a steady sink from a clean cutoff, which is exactly the question above.
+
+**Leading hypothesis, unconfirmed:** `ap_hover_throttle` was at the `1275` default while this
+airframe hovers near 34% (`1340`). At rescue onset the integrator is reset and target altitude
+equals current altitude, so commanded throttle is essentially that value
+(`autopilot_multirotor.c:195-205`) — below hover, so it sinks. Falling short of the commanded climb
+is then itself a failure that **ignores `gps_rescue_sanity_checks`**: `RESCUE_ATTAIN_ALT` ticks a
+counter once per second when achieved climb is under half the target, forces `RESCUE_LANDING` at
+ten seconds, and disarms after another ten (`gps_rescue_multirotor.c:434-460`, `:826-838`). That
+ends in motors stopping, which matches what was seen.
+
+**Next attempt is the pilot's and is outside the change `configure-pavo20-gps-rescue`.** Trigger
+beyond `gps_rescue_min_start_dist` — 25–30 m — with the hover throttle measured and the log
+running. Bands tabulated in `FAILSAFE.md` under *Where you can and cannot trigger a rescue*.
+
+Two source findings came out of setting those, both of which corrected this repo:
+
+- **`gps_rescue_return_alt` is inert under `MAX_ALT`.** It is read only in the `FIXED_ALT` branch
+  (`gps_rescue_multirotor.c:179-181`); `MAX_ALT` computes `maxAltitudeCm + initialClimbCm`
+  (line 186-189). And because `gps_set_home_point_once = ON`, `maxAltitudeCm` is **not** reset on
+  disarm — "if set_home_point_once is true, hold maxAlt until power cycled" (line 160-163) — so the
+  return altitude carries across arms just as home position does. A 60 m pack followed by a low
+  cruise gives a 70 m rescue climb.
+- **`RESCUE_SANITY_FS_ONLY` is safer than `ON` for switch testing, not weaker.** `ON` turns any
+  sanity failure into `RESCUE_ABORT`, which disarms (line 834-838) — during a switch test the quad
+  falls. `FS_ONLY` aborts only on hard Rx loss and otherwise gives 20 s of hover to recover
+  (line 366-375, comment at line 214). During a real failsafe the two are identical, because a real
+  failsafe *is* hard Rx loss. `FAILSAFE.md` previously said to use `ON`; that has been corrected.
 
 GPS Rescue takes its level reference from the accelerometer calibration, so do not test it on a
 board that has been pasted to without a re-level.
@@ -273,6 +375,16 @@ the CLI is open. Not a fault.
 
 **An upside-down prop reads exactly like a PID oscillation** — flies, but screams above ~35%
 throttle. Check prop orientation before touching the tune.
+
+**Lookup values are matched exactly, and a rejected one can fail silently.** `failsafe_procedure`
+takes `AUTO-LAND`, `DROP` or `GPS-RESCUE` — **hyphen, not underscore** (`cli/settings.c:382-384`).
+The CLI compares with `strcasecmp` (`cli/cli.c:4552-4553`): case does not matter, punctuation does.
+`GPS_RESCUE` is rejected. This sat in `PAVO20PRO2_FAILSAFE_GPS_RESCUE.txt` for days and would have
+failed on first paste. The danger is not the error — it is that the file is a **single line with no
+`batch start`**, so the rejected line scrolls past, `save` writes nothing, and the aircraft keeps
+`DROP` while you believe GPS Rescue is armed. Underscores elsewhere are fine because those tables
+use them (`MAX_ALT`, `RESCUE_SANITY_FS_ONLY`); the only way to know is to read the table or run
+`get`, which prints the allowed values. **After any lookup `set`, read it back with `get`.**
 
 **`profile_name` and `rateprofile_name` are capped at 8 characters.** Exceeding it aborts the whole
 batch at `save` and nothing is written.

@@ -123,7 +123,11 @@ zero-sized `qrcode` was not established, and did not need to be: neither outcome
 because a human can type them into a map by hand — rather than handing `lvgl.qrcode` a degenerate
 dimension.
 
-## Found after the review, not yet fixed
+## Found after the review was written
+
+Both were missed by the original pass and surfaced on 2026-09-03. Each entry carries its own
+status: the first is now fixed pending radio confirmation, the second was assessed and
+deliberately left alone.
 
 ### A position with no fix is displayed and saved as though it were real
 
@@ -165,17 +169,40 @@ NOT be presented as a position*, `openspec/specs/radio/gpsqr-widget/` — its ra
 assumed `0, 0` was the only invalid-fix signature, which was true only for the provider in use when
 it was written.
 
-**Not fixed here.** The fix direction is known and sound: `crsfFrameGps()` writes `gpsSol.numSat`
-as the final byte of the same frame that carries the coordinates, so a satellite count does reach
-the radio, and `hasFix()` should require it to clear a threshold. What is **not** known is which
-EdgeTX telemetry sensor exposes that count on the V12 MAX. `CLAUDE.md` is explicit that this repo
-has no interpreter, emulator or harness for the widget — guessing a sensor name would ship an
-untestable change to the one tool whose entire job is telling you where to walk. Confirm the sensor
-name on the radio first.
+**Fixed 2026-09-03, pending confirmation on the radio.** The blocker was never the fix direction —
+`crsfFrameGps()` writes `gpsSol.numSat` as the final byte of the same frame that carries the
+coordinates, so a satellite count does reach the radio. What was unknown was the EdgeTX sensor
+name, and `CLAUDE.md` forbids guessing it: this repo has no interpreter, emulator or harness, so a
+guessed name would ship an untestable change to the one tool whose entire job is telling you where
+to walk.
 
-**Interim mitigation:** trust a position only if the aircraft had a 3D fix when it was sent. Delete
-`/LOGS/gpsqr_last.txt` after any session where the widget was running without a fix, or the bad
-position persists as `SAVED`.
+**The sensor is `Sats`**, observed in the field on 2026-09-03 reading above 20 while the Pavo20 was
+bound. `hasFix()` now takes the count as a second argument and requires `>= MIN_SATS` (5) in
+addition to non-zero coordinates.
+
+**The absent-sensor case needed a different API, and the first attempt at this fix was wrong.**
+`getValue()` cannot detect a missing sensor: the EdgeTX reference states "Zero is returned for:
+non-existing sources", and for every telemetry source while the stream is not received. So `0`
+means "no such sensor", "telemetry down" and "no satellites" indistinguishably, and the original
+`type(n) ~= "number"` guard could never fire — `NO SAT SENSOR` was unreachable code. `getFieldInfo()`
+is the correct test, returning `nil` when the field is not found. `satCount()` now probes with
+`getFieldInfo()` and caches the numeric id **only once found**, deliberately not caching absence,
+because sensors are discovered when telemetry first arrives and a widget loaded before the quad is
+powered must still pick the sensor up later.
+
+The status line now distinguishes the two: `NO FIX (3 sat)` versus `NO SAT SENSOR`. A blank screen
+is diagnosable rather than mysterious.
+
+**Still to confirm on the radio**, since none of this can be executed here — `npx luaparse` checks
+syntax and nothing else:
+
+- That `Sats` is discovered on every model the widget runs on, not only the Pavo20.
+- That a low count renders `NO FIX (n sat)` and no QR code, with the SD file left untouched.
+- That the sensor id caching picks the sensor up when the widget is opened before the quad is
+  powered on.
+
+**Interim mitigation, still worth keeping:** trust a position only if the aircraft had a 3D fix when
+it was sent, and delete `/LOGS/gpsqr_last.txt` after any session where the widget ran without one.
 
 ### The saved fix is shared across all models
 

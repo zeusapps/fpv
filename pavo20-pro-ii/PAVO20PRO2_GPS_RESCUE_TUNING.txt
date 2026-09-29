@@ -1,0 +1,124 @@
+# Pavo20 Pro II 4S - GPS Rescue: BLOCK 1 of 2, tuning parameters
+#
+# This block is SAFE TO PASTE BEFORE the rescue has been tested, and you should.
+# It does not change failsafe_procedure and does not arm anything. All it does is
+# make a switch-induced rescue behave conservatively instead of running the
+# firmware defaults, which are considerably more aggressive than this airframe
+# can deliver.
+#
+# Block 2 is PAVO20PRO2_FAILSAFE_GPS_RESCUE.txt. It contains one line, it makes
+# GPS Rescue the failsafe response, and it must not be pasted until the switch
+# testing in FAILSAFE.md has passed.
+#
+# Paste AFTER the main config (PAVO20PRO2_ELRS_V1.txt). Deliberately no "batch
+# start", so a single rejected line does not block the rest or refuse the save.
+#
+# The rescue switch is AUX6 / CH10, added separately - see FAILSAFE.md:
+#   aux 6 46 5 1700 2100 0 0
+#
+# What this changes against the 2025.12.2 firmware defaults, which is what the
+# aircraft runs until this block is pasted:
+#
+#   ascend_rate    750 -> 200 cm/s   7.5 m/s is a climb demand this airframe
+#                                    cannot meet; it just goes to full throttle
+#   ground_speed   750 -> 500 cm/s   7.5 -> 5 m/s, controllable on a ducted 2.2"
+#   descent_dist    20 ->  15 m
+#   descend_rate   150 -> 100 cm/s
+#
+# Everything else below already equals the firmware default and is pinned so the
+# choice is visible rather than inferred. See FAILSAFE.md.
+
+# ---- Preconditions ------------------------------------------------------------
+# Refuse to arm without a fix, and require a healthy satellite count before a
+# rescue is considered valid. Do not lower these.
+set gps_rescue_allow_arming_without_fix = OFF
+set gps_rescue_min_sats = 8
+
+# Under this distance from home, a rescue does NOT fly home. Note what it does
+# instead (gps_rescue_multirotor.c:729-737): it climbs to at least 10 m and
+# pitches FORWARD, flying AWAY from you, until it is past this distance. A rescue
+# triggered close in initially departs. Below 5 m and on the ground it instead
+# disarms instantly, which is deliberate.
+set gps_rescue_min_start_dist = 15
+
+# ---- Climb and return ---------------------------------------------------------
+# Climb 10 m before turning for home.
+set gps_rescue_initial_climb = 10
+
+# Return at the highest altitude reached this flight, plus initial_climb.
+# Safest near obstacles: it will not descend into something it already flew above.
+# Verified 2025.12.2, gps_rescue_multirotor.c:186-189 -
+#   returnAltitudeCm = maxAltitudeCm + initialClimbCm
+#
+# CAUTION: gps_set_home_point_once = ON on this aircraft, and setReturnAltitude()
+# holds maxAltitudeCm at zero while disarmed ONLY when that option is off
+# (line 160-163). So max altitude persists across arms until a power cycle, just
+# as the home point does. A 60 m pack followed by a low cruise gives a 70 m climb.
+# Power cycle between packs to reset it.
+set gps_rescue_alt_mode = MAX_ALT
+
+# NOTE: gps_rescue_return_alt is READ ONLY IN FIXED_ALT MODE
+# (gps_rescue_multirotor.c:179-181). Under MAX_ALT above, this line is inert. It
+# is kept so that switching alt_mode to FIXED_ALT gives a sane value rather than
+# the firmware's 30 m. Do not read it as "the altitude this quad returns at".
+set gps_rescue_return_alt = 25
+
+# 2 m/s up, 1 m/s down. Gentle - this airframe has little thrust margin.
+# The 750 cm/s firmware default is the single most important line in this file.
+set gps_rescue_ascend_rate = 200
+set gps_rescue_descend_rate = 100
+
+# 5 m/s ground speed. Slow enough to stay controllable, fast enough to make
+# progress against light wind. A 2.2" ducted quad has poor penetration; do not
+# raise this expecting it to fight wind, it cannot.
+set gps_rescue_ground_speed = 500
+
+# Begin descending 15 m out from home.
+set gps_rescue_descent_dist = 15
+
+# ---- Hover throttle reference ---------------------------------------------------
+# This is the throttle the aircraft is commanded at the INSTANT a rescue begins,
+# and getting it wrong is the difference between climbing and being brought down.
+#
+# At 2025.12.2 the altitude controller computes
+#   throttleOffset = altitudeP + altitudeI - altitudeD + altitudeF + hoverOffset
+#   hoverOffset    = hoverThrottle - PWM_RANGE_MIN
+# (autopilot_multirotor.c:195-205). RESCUE_INITIALIZE calls resetAltitudeControl(),
+# zeroing the integrator (gps_rescue_multirotor.c:209), and the target altitude
+# equals the current altitude while idle, so P starts near zero. Commanded
+# throttle at rescue onset is therefore approximately this value alone.
+#
+# The firmware default is 1275 (pg/autopilot_multirotor.c:36) = 27.5%. This
+# airframe's throttle curve puts its hover point at 34% - thr_hover = 34 is the
+# y-coordinate of the hover point, fc/rc.c:826-838 - so about 1340. Left at the
+# default, a rescue starts ~6.5% below hover and the quad sinks.
+#
+# That is not just a sag. Falling short of the commanded climb is itself a
+# failure condition, and one that IGNORES gps_rescue_sanity_checks entirely: in
+# RESCUE_ATTAIN_ALT, if achieved altitude change is under half the target, a
+# counter ticks once per second and at 10 s forces RESCUE_LANDING, which enables
+# impact detection and disarms after another 10 s (gps_rescue_multirotor.c:434-460).
+#
+# 1340 is DERIVED from thr_hover, not measured. Before flying a rescue, hover the
+# aircraft, read the throttle percentage off the OSD, and correct this to match:
+# percent * 10 + 1000. If the measurement disagrees, the measurement wins.
+set ap_hover_throttle = 1340
+
+# ---- Sanity checks ------------------------------------------------------------
+# FS_ONLY, not ON. This is deliberate and is NOT the weaker setting for the case
+# that matters. Verified 2025.12.2, gps_rescue_multirotor.c:366-375:
+#
+#   RESCUE_SANITY_ON      -> any sanity failure sets RESCUE_ABORT, which disarms
+#                            (line 834-838). During a SWITCH-INDUCED test that
+#                            means the quad falls out of the sky.
+#   RESCUE_SANITY_FS_ONLY -> aborts (disarms) only on hard Rx loss. Otherwise it
+#                            sets RESCUE_DO_NOTHING: 20 s of level hover with
+#                            impact-disarm, per the comment at line 214, "20s of
+#                            hover for switch induced sanity failures to allow
+#                            time to recover".
+#
+# During a real failsafe the two are identical, because a real failsafe IS hard Rx
+# loss. They differ only for switch-induced rescues, where FS_ONLY is the safer.
+set gps_rescue_sanity_checks = RESCUE_SANITY_FS_ONLY
+
+save

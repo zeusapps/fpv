@@ -263,15 +263,82 @@ Nothing about rescue configuration belongs here. See below.
 
 ### A switch shows on the radio but not in Betaflight
 
-Check in this order:
+**First, know what the symptom cannot be.** On CRSF the flight controller always presents
+**16 channels**, whatever the radio actually sends — `CRSF_MAX_CHANNEL` is `16`
+(`src/main/rx/crsf.h:28`) and `crsfRxInit` assigns it unconditionally to
+`rxRuntimeState->channelCount` (`src/main/rx/crsf.c:629`). `MSP_RC` then reports that many values
+(`src/main/msp/msp.c:1317-1321`). So the Receiver tab draws sixteen bars on an ELRS quad even if
+the radio transmits eight. **"AUX 6 is missing" is not a possible symptom; "AUX 6 does not move"
+is.**
+
+A channel that never arrives reads **exactly 1500**, not zero and not noise. `rxInit` presets every
+`rcData[i]` to `midrc` (`src/main/rx/rx.c:307-309`) and `readRxChannelsApplyRanges` only writes
+indices below `rxChannelCount`, so an unfed channel keeps its preset forever. A bar parked dead
+centre while you work the switch is the signature.
+
+Check in this order. The first two need no quad.
 
 1. **Naming.** Betaflight calls CH10 "AUX 6" (CH5 = AUX 1, CH6 = AUX 2 … CH10 = AUX 6). Watch the
    AUX 6 bar on the Receiver tab; select AUX 6 on the Modes tab.
-2. **Radio channel range.** *Model setup → Internal RF → Channel range* must cover the channel
-   (CH1–16 is the default). The radio's channel monitor shows mixer output *before* this limit, so
-   a channel can move on the radio and never be transmitted.
-3. **ELRS packet mode.** Standard modes carry 12 channels (4 + 8 aux), but Full-Res "8ch" modes
-   carry only CH1–8. Check Packet Rate in the ELRS Lua script; avoid "8ch" modes if you use CH9+.
+2. **The radio's own channel monitor.** If CH10 does not move here, nothing downstream matters —
+   it is a mixer problem, not a link problem. Momentary buttons are the usual culprit: they output
+   only while held unless a sticky logical switch latches them.
+3. **Radio channel range.** *Model setup → Internal RF → Channel range* must cover the channel
+   (CH1–16 is the default). The channel monitor shows mixer output *before* this limit, so a
+   channel can move on the radio and never be transmitted.
+4. **ELRS switch mode — only matters on "Full" packet rates.** `Hybrid` and `Wide` both carry to
+   CH12 and are the only modes available from 50Hz through F1000Hz, so on those rates this cannot
+   be the cause. The Full-Res modes exist *solely* on `100Hz Full` and `333Hz Full`, and one of
+   them truncates: **`8ch` stops at CH9.** This is what bit the Pavo20 — see the table below.
+5. **`max_aux_channels`** — note the plural in the CLI, though the struct field is singular.
+   `rxChannelCount = MIN(max_aux_channel + NON_AUX_CHANNEL_COUNT, channelCount)`
+   (`src/main/rx/rx.c:402`) caps what gets processed into `rcData`. The default is
+   `DEFAULT_AUX_CHANNEL_COUNT`, which is `MAX_AUX_CHANNEL_COUNT` (14) on an FPU MCU and 6 without
+   (`src/main/target/common_post.h:46-50`). **Both defaults leave CH10 alive** — 14 gives channels
+   1–18 clamped to 16, and even 6 gives 1–10. So this only bites if somebody set it by hand. One
+   `get max_aux_channel` settles it.
+
+**Round-robin is not a fault.** In `Hybrid` and `Wide` only AUX 1 rides every packet; AUX 2–8 take
+turns. AUX 6 therefore updates at roughly a seventh of the packet rate and, in `Hybrid`, at 3-bit
+resolution. A coarse, visibly laggy AUX 6 bar is the mode working as designed — and it means a
+button pressed for only a few tens of milliseconds can fall between slots.
+
+### What each Full-Res switch mode actually transmits
+
+Read off the ExpressLRS source at **tag 3.5.6** — the version on this fleet's receivers —
+`src/lib/OTA/OTA.cpp`, `GenerateChannelData8ch12ch` and `UnpackChannelData8ch`. Do not take this
+from the docs page: it describes the v4.0 layout, which is different (see the caveat below). Each
+full-res packet carries two groups of four 10-bit channels, and the group offsets are what decide
+everything:
+
+| Mode | Every packet | Half rate (alternating) | Never sent |
+|---|---|---|---|
+| `8ch` | CH1–4, CH5 *(2-position)*, CH6–9 | — | **CH10–16** |
+| `12ch Mixed` | CH1–4, CH5 *(2-position)* | CH6–9 / CH10–13 | CH14–16 |
+| `16ch Rate/2` | — | CH1–8 / CH9–16 | — |
+
+**CH5 is special, but only in `8ch` and `12ch Mixed`.** In those two modes the transmitter sends it
+as a single bit — `ota8->rc.ch4 = CRSF_to_BIT(channelData[4])`, per the comment "All channel data
+is 10 bit apart from AUX1 which is 1 bit" — and the receiver restores it with
+`channelData[4] = BIT_to_CRSF(ota8->rc.ch4)`. That line sits in the **`else` branch** of
+`UnpackChannelData8ch`, so in `16ch Rate/2` it never runs: the transmitter still sets the bit, the
+receiver ignores it, and CH5 arrives as ordinary 10-bit data in the CH1–8 group instead.
+
+The practical consequences:
+
+- **In `8ch` and `12ch Mixed`, CH5 can only ever be a 2-position switch** — a 3-position or
+  analogue source on CH5 collapses to two states. It rides every packet, which is why ARM lives
+  there.
+- **In `16ch Rate/2`, CH5 regains full resolution but drops to half rate** along with everything
+  else, sticks included. Nothing is lost that matters at 333Hz Full, but be clear that the arm
+  channel is no longer the every-packet channel it is in the other two modes.
+- **`12ch Mixed` is the only mode that keeps CH1–4 at the full packet rate.** If you need CH10–13
+  and want maximum stick rate, that is the one to pick.
+
+**This mapping is version-specific and will expire.** At ExpressLRS `master` (v4.0) the offsets
+differ — `8ch` becomes CH1–8, `12ch` tops out at CH12, and the arm bit moves to a dedicated
+`isArmed` field mirrored into CH14/AUX10. Re-read `OTA.cpp` at the tag you are actually running
+before trusting any of the above.
 
 ## Field workflow
 

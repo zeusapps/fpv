@@ -17,7 +17,7 @@ The 3S variant is documented below for reference only — do not apply its setti
 | Gyro | ICM42688P (target also supports BMI270 / ICM42622P / LSM6DSK320X) |
 | Baro | BMP280 / DPS310 on I2C1 |
 | Compass | none (`mag_hardware = NONE`) |
-| Blackbox | onboard SPI flash (M25P16 on SPI3) |
+| Blackbox | onboard SPI flash, **16 MB** — JEDEC `0x852018`, `totalSize=16777216` from `flash_info` on 2026-09-20. Not the 2 MB M25P16 this table claimed until then. `blackbox_device = SPIFLASH` |
 | Motors | LAVA 1104 5500KV, 12 poles |
 | Props | Gemfan D2.2 3-blade, screw-mount |
 | Motor protocol | DSHOT300, bidirectional DShot ON |

@@ -19,7 +19,10 @@ Both ends must be flashed with the **same phrase**.
 ### On the HelloRadio V12 MAX
 
 1. Power on the radio.
-2. Open the **ExpressLRS Lua script** (SYS / Tools menu → ExpressLRS).
+2. Open the **ExpressLRS Lua script**: select the model, then **SYS** → **Tools** →
+   **ExpressLRS** → Enter. If it is not listed, the script is missing from `/SCRIPTS/TOOLS/elrs.lua`
+   on the SD card; if it hangs on "Loading...", raise *Model Setup → Internal RF → Baudrate* to at
+   least 400K and reboot the radio.
 3. Select **WiFi Connectivity** → **Enable WiFi** on the TX module.
 4. Connect to the module's WiFi hotspot from your phone or laptop (default password is usually
    `expresslrs`), then open `http://10.0.0.1` in a browser.
@@ -67,6 +70,21 @@ Both ends must be flashed with the **same phrase**.
 
 For a cinewhoop flown close in, you do not need the highest rate. **250Hz** gives a good balance
 of latency and range/penetration. 500Hz is fine too. Set it in the Lua script under **Packet Rate**.
+
+**What is actually set, as of 2026-09-03: `333Hz Full` 2.4G.** That is a Full-Resolution rate, not
+one of the rates above, and it brings a constraint the plain rates do not have — **Switch Mode
+must not be `8ch`**, which transmits nothing above CH9 and silently drops CH10 upward. It was set
+to `8ch`, which is why the CH10 return-to-home switch never reached Betaflight.
+
+**Switch Mode is now `12ch Mixed`** (changed 2026-09-03, AUX 6 confirmed moving in Betaflight).
+It is the only Full-Res mode that keeps CH1–4 at the full packet rate, carrying CH6–13 at half
+rate instead; `16ch Rate/2` was tried first and also works, but halves the stick rate and only
+adds CH14–16. Note `12ch Mixed` **forces CH5 to two positions** — fine here, where CH5 is ARM and
+nothing else, but do not move a 3-position switch onto it. The full
+per-mode channel map, read off the ExpressLRS 3.5.6 source, is in `../radio/README.md` under
+*What each Full-Res switch mode actually transmits*.
+
+Switch Mode is read-only while a receiver is connected — power the quad off before changing it.
 
 Set **Telemetry Ratio** to `Std` (1:64) or `1:32` — you want telemetry for the link stats in the OSD.
 

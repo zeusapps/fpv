@@ -29,6 +29,13 @@
 ---------------------------------------------------------------------
 
 local SENSOR        = "GPS"                          -- telemetry sensor name
+local SAT_SENSOR    = "Sats"                         -- satellite count; confirmed to be the
+                                                     -- name EdgeTX gives it on the V12 MAX,
+                                                     -- 2026-09-03, seen reading >20 in the field
+local MIN_SATS      = 5      -- below this, coordinates are not trusted. Betaflight sends
+                             -- gpsSol.llh from NAV-PVT with no fix check (io/gps.c:2244-2256,
+                             -- telemetry/crsf.c), so a receiver with no fix transmits
+                             -- plausible, non-zero, entirely wrong coordinates.
 local URL_FMT       = "https://maps.google.com/?q=%.6f,%.6f"
 local SAVE_PATH     = "/LOGS/gpsqr_last.txt"
 local REBUILD_TICKS = 500    -- rebuild QR at most every 5 s (1 tick = 10 ms)
@@ -47,9 +54,36 @@ local options = {
   { "SolidBG",  BOOL,  1      },
 }
 
-local function hasFix(v)
+-- Returns the satellite count, or nil if the sensor does not exist on this model.
+--
+-- getValue() cannot make that distinction: the EdgeTX reference states "Zero is
+-- returned for: non-existing sources" and for every telemetry source while the
+-- stream is not received. So 0 means "no such sensor", "telemetry down" or "no
+-- satellites", indistinguishably. getFieldInfo() is the test that separates
+-- them - it returns nil when the field was not found.
+--
+-- The id is cached once found, which the reference also notes is the faster
+-- lookup. It is deliberately NOT cached when absent: sensors are discovered
+-- when telemetry first arrives, so a widget loaded before the quad is powered
+-- must be able to pick the sensor up later.
+local satFieldId = nil
+local function satCount()
+  if satFieldId == nil then
+    local info = getFieldInfo(SAT_SENSOR)
+    if info == nil then return nil end
+    satFieldId = info.id
+  end
+  local n = getValue(satFieldId)
+  if type(n) ~= "number" then return nil end
+  return n
+end
+
+-- Coordinates alone are not evidence of a fix. 0,0 was the whole no-fix
+-- signature under NMEA; under UBLOX it is not. Require satellites as well.
+local function hasFix(v, sats)
   return type(v) == "table" and v.lat ~= nil and v.lon ~= nil
          and (v.lat ~= 0 or v.lon ~= 0)
+         and type(sats) == "number" and sats >= MIN_SATS
 end
 
 -- restore the last saved fix from the SD card (after a power cycle)
@@ -88,7 +122,9 @@ end
 -- poll telemetry; runs both when visible (refresh) and hidden (background)
 local function poll(w)
   local v = getValue(SENSOR)
-  if hasFix(v) then
+  local sats = satCount()
+  w.sats = sats
+  if hasFix(v, sats) then
     if v.lat ~= w.lat or v.lon ~= w.lon then
       w.lat, w.lon = v.lat, v.lon
       w.needsSave = true
@@ -105,7 +141,11 @@ end
 -- short status word that fits next to / below the QR code
 local function statusShort(w)
   if w.fromFile then return "SAVED" end
-  if w.lastFixTime == nil then return "..." end
+  if w.lastFixTime == nil then
+    -- never accepted a position. Say why, so a blank screen is diagnosable.
+    if w.sats == nil then return "NO SAT SENSOR" end
+    return string.format("NO FIX (%d sat)", w.sats)
+  end
   local age = (getTime() - w.lastFixTime) / 100
   if age < LIVE_AGE_S then
     return "LIVE"

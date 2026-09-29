@@ -1,61 +1,58 @@
-# Pavo20 Pro II 4S - Failsafe: GPS Rescue
+# Pavo20 Pro II 4S - GPS Rescue: BLOCK 2 of 2, arming the failsafe
 #
-# Paste AFTER the main config (PAVO20PRO2_ELRS_V1.txt). This file deliberately has NO
-# "batch start", so a single rejected line does not block the rest or refuse the save.
+# ONE LINE. It is separated from the tuning parameters on purpose, because it is
+# the only part of GPS Rescue that is dangerous to enable early.
 #
-# DO NOT PASTE THIS UNTIL GPS RESCUE HAS BEEN TESTED ON A SWITCH.
-# See FAILSAFE.md. An untested GPS Rescue is more dangerous than no rescue at all -
-# a bad configuration flies the aircraft away under power instead of dropping it.
+# ---------------------------------------------------------------------------
+# DO NOT PASTE THIS UNTIL GPS RESCUE HAS PASSED THE SWITCH TESTING IN FAILSAFE.md
+# ---------------------------------------------------------------------------
 #
-# Values below are deliberately conservative for a 2.2" ducted cinewhoop carrying an
-# O4 Pro: low speeds, low climb rates, a short return altitude, and a min-start distance
-# that keeps it from triggering during close-in flying.
+# Until this is pasted, failsafe_procedure sits at the 2025.12.2 firmware default
+# of DROP_IT (flight/failsafe.c:78) - on loss of signal the aircraft cuts motors
+# and falls. That is the safe status quo. The failure mode of DROP is a broken
+# quad; the failure mode of a bad rescue is a flyaway under power, possibly
+# toward people. There is no hurry to change it.
+#
+# Prerequisites, all of them, in order:
+#
+#   1. PAVO20PRO2_GPS_RESCUE_TUNING.txt (block 1) has been pasted and saved.
+#      Without it a rescue runs firmware defaults, including a 7.5 m/s climb
+#      demand this airframe cannot meet.
+#   2. aux 6 46 5 1700 2100 0 0 is applied and AUX 6 is confirmed moving on the
+#      Receiver tab.
+#   3. ap_hover_throttle has been MEASURED, not derived. The committed 1340 comes
+#      from thr_hover = 34, not from this aircraft. Hover it, read the OSD
+#      throttle percentage, set percent*10+1000, confirm with
+#      "get ap_hover_throttle". Too low and the rescue sinks, cannot meet the
+#      climb demand, and is brought down by the rescue's own timeout - the most
+#      likely cause of the 2026-09-03 drop.
+#   4. GPS holds a fix IN FLIGHT - moving, motors running, O4 transmitting. As of
+#      2026-09-03 this has never been verified; the only fix on record is
+#      stationary, on a balcony, under partial sky.
+#   5. Home is being set, and OSD home distance behaves when you walk away.
+#   6. The switch test in FAILSAFE.md has been flown at several distances and
+#      directions in a large open field, BEYOND gps_rescue_min_start_dist, and it
+#      returned and descended near you every time.
+#   7. Every one of those attempts was LOGGED and the logs were read. There is
+#      no "feature BLACKBOX" at 2025.12.2 - logging is on whenever
+#      blackbox_device is not NONE, and it already reads SPIFLASH. The thing
+#      that actually stops it recording is a FULL FLASH, which is what silently
+#      cost us the 2026-09-03 attempt: flash_info reported usedSize equal to
+#      totalSize. Erase before every attempt and set debug_mode = RTH. An
+#      attempt nobody logged cannot accept this configuration and cannot
+#      condemn it.
+#
+# If any of those is unmet, close this file.
+#
+# NOTE THE HYPHEN. The CLI lookup table is { "AUTO-LAND", "DROP", "GPS-RESCUE" }
+# (cli/settings.c:382-384) and matching is strcasecmp - case-insensitive but
+# otherwise exact (cli/cli.c:4552-4553). "GPS_RESCUE" with an underscore is
+# REJECTED. Because this file is a single line, a rejected line means save writes
+# nothing and failsafe silently stays at DROP while you believe it is armed.
+# After pasting, confirm with:  get failsafe_procedure
+#
+# To go back to dropping:  set failsafe_procedure = DROP
 
-# ---- Failsafe procedure -------------------------------------------------------
-set failsafe_procedure = GPS_RESCUE
-
-# ---- Preconditions ------------------------------------------------------------
-# Refuse to arm without a fix, and require a healthy satellite count before a rescue
-# is considered valid. Do not lower these.
-set gps_rescue_allow_arming_without_fix = OFF
-set gps_rescue_min_sats = 8
-
-# Under this distance from home, do a simple descent instead of flying back.
-# A cinewhoop spends most of its life within 30 m of the pilot; flying "home" from
-# 8 m away is more dangerous than landing where it is.
-set gps_rescue_min_start_dist = 15
-
-# ---- Climb and return ---------------------------------------------------------
-# Climb 10 m before turning for home, then return at 25 m.
-set gps_rescue_initial_climb = 10
-set gps_rescue_return_alt = 25
-
-# 2 m/s up, 1 m/s down. Gentle - this airframe has little thrust margin.
-set gps_rescue_ascend_rate = 200
-set gps_rescue_descend_rate = 100
-
-# 5 m/s ground speed. Slow enough to stay controllable, fast enough to make progress
-# against light wind. A 2.2" ducted quad has poor penetration; do not raise this
-# expecting it to fight wind, it cannot.
-set gps_rescue_ground_speed = 500
-
-# Begin descending 15 m out from home.
-set gps_rescue_descent_dist = 15
+set failsafe_procedure = GPS-RESCUE
 
 save
-
-# ---- Settings that need checking on your firmware -----------------------------
-# These two are lookup values whose allowed options vary by version. Run:
-#
-#   get gps_rescue_alt_mode
-#   get gps_rescue_sanity_checks
-#
-# which print the allowed values, then set them explicitly and "save" again.
-#
-# Recommended intent:
-#   gps_rescue_alt_mode      -> the "max altitude reached this flight" option.
-#                               Safest near obstacles: it will not descend into
-#                               something it already flew above.
-#   gps_rescue_sanity_checks -> leave ON. It aborts a rescue that is not making
-#                               progress toward home, which is what stops a
-#                               misconfigured rescue from flying away.
