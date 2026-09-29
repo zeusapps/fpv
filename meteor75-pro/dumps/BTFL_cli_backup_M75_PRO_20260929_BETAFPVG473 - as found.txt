@@ -1,5 +1,4 @@
-defaults nosave
-
+# 
 # diff all
 
 # version
@@ -23,9 +22,7 @@ signature
 feature OSD
 
 # serial
-serial 0 64 115200 57600 0 115200
 serial 1 0 115200 57600 0 115200
-serial 2 0 115200 57600 0 115200
 serial 3 131073 115200 57600 0 115200
 
 # beacon
@@ -33,13 +30,16 @@ beacon RX_LOST
 beacon RX_SET
 
 # aux
-# AUX1 (CH5) = Flight modes: low=ANGLE, mid=HORIZON, high=ACRO
-# AUX2 (CH6) = ARM: high=ARM
-# AUX5 (CH9) = TURTLE: C1 button = turtle mode
-aux 0 0 1 1700 2100 0 0
-aux 1 1 0 900 1300 0 0
-aux 2 2 0 1300 1700 0 0
-aux 3 35 4 1700 2100 0 0
+aux 0 0 0 1700 2100 0 0
+aux 1 1 1 900 1300 0 0
+aux 2 13 3 1700 2100 0 0
+aux 3 35 1 1700 2100 0 0
+aux 4 36 2 1700 2100 0 0
+
+# adjrange
+adjrange 0 0 4 900 1200 12 4 0 0
+adjrange 1 0 4 1375 1675 12 4 0 0
+adjrange 2 0 4 1800 2100 12 4 0 0
 
 # master
 set gyro_lpf1_static_hz = 0
@@ -49,15 +49,13 @@ set dyn_notch_q = 400
 set dyn_notch_min_hz = 150
 set dyn_notch_max_hz = 300
 set gyro_lpf1_dyn_min_hz = 0
-set acc_calibration = -12851,-6,14,1
+set acc_calibration = -17621,-71,65,1
 set baro_hardware = NONE
-set serialrx_provider = SBUS
-set sbus_baud_fast = ON
 set dshot_bidir = ON
 set dshot_bitbang = AUTO
 set motor_pwm_protocol = DSHOT300
 set motor_poles = 12
-set vbat_max_cell_voltage = 435
+set vbat_max_cell_voltage = 450
 set ibata_scale = 550
 set ibata_offset = -100
 set small_angle = 180
@@ -70,20 +68,20 @@ set osd_link_quality_pos = 2497
 set osd_rssi_dbm_pos = 2465
 set osd_rsnr_pos = 160
 set osd_tim_1_pos = 386
-set osd_tim_2_pos = 3148
+set osd_tim_2_pos = 2145
 set osd_remaining_time_estimate_pos = 33
-set osd_flymode_pos = 2113
-set osd_throttle_pos = 2145
+set osd_flymode_pos = 2049
+set osd_throttle_pos = 2113
 set osd_vtx_channel_pos = 33
-set osd_crosshairs_pos = 2361
-set osd_ah_sbar_pos = 2362
-set osd_ah_pos = 2234
+set osd_crosshairs_pos = 272
+set osd_ah_sbar_pos = 314
+set osd_ah_pos = 2149
 set osd_current_pos = 2592
 set osd_mah_drawn_pos = 2625
-set osd_craft_name_pos = 2582
+set osd_craft_name_pos = 2579
 set osd_home_dist_pos = 98
 set osd_flight_dist_pos = 130
-set osd_warnings_pos = 14837
+set osd_warnings_pos = 14709
 set osd_avg_cell_voltage_pos = 44
 set osd_pit_ang_pos = 2433
 set osd_rol_ang_pos = 2401
@@ -91,52 +89,14 @@ set osd_disarmed_pos = 267
 set osd_esc_tmp_pos = 129
 set osd_esc_rpm_pos = 150
 set osd_core_temp_pos = 225
-set osd_stick_overlay_left_pos = 2477
-set osd_stick_overlay_right_pos = 3489
+set osd_stick_overlay_left_pos = 2506
+set osd_stick_overlay_right_pos = 2524
+set osd_rate_profile_name_pos = 2081
+set osd_sys_vtx_temp_pos = 2369
 set debug_mode = GYRO_SCALED
 set craft_name = m75 pro
 
 profile 0
-
-# profile 0
-set profile_name = GF 40mm
-set dterm_lpf1_dyn_min_hz = 82
-set dterm_lpf1_dyn_max_hz = 165
-set dterm_lpf1_static_hz = 82
-set dterm_lpf2_static_hz = 165
-set vbat_sag_compensation = 100
-set anti_gravity_gain = 50
-set iterm_relax_type = GYRO
-set throttle_boost = 0
-set p_pitch = 64
-set i_pitch = 103
-set d_pitch = 67
-set f_pitch = 42
-set p_roll = 64
-set i_roll = 103
-set d_roll = 48
-set f_roll = 43
-set p_yaw = 64
-set i_yaw = 103
-set f_yaw = 43
-set d_min_roll = 43
-set d_min_pitch = 58
-set auto_profile_cell_count = 1
-set thrust_linear = 30
-set feedforward_averaging = 2_POINT
-set feedforward_smooth_factor = 60
-set feedforward_jitter_factor = 10
-set dyn_idle_min_rpm = 75
-set simplified_master_multiplier = 120
-set simplified_i_gain = 90
-set simplified_d_gain = 120
-set simplified_pi_gain = 120
-set simplified_dmax_gain = 40
-set simplified_feedforward_gain = 30
-set simplified_pitch_d_gain = 120
-set simplified_pitch_pi_gain = 95
-set simplified_dterm_filter_multiplier = 110
-set tpa_rate = 80
 
 profile 1
 
@@ -149,24 +109,24 @@ profile 0
 
 rateprofile 0
 
-# rateprofile 0 - BEGINNER (lower sensitivity, more expo)
-set rateprofile_name = Beginner
+# rateprofile 0
+set rateprofile_name = Base 100
 set thr_mid = 45
 set thr_expo = 65
-set roll_rc_rate = 5
-set pitch_rc_rate = 5
+set roll_rc_rate = 115
+set pitch_rc_rate = 115
 set yaw_rc_rate = 5
-set roll_expo = 65
-set pitch_expo = 65
-set yaw_expo = 55
-set roll_srate = 50
-set pitch_srate = 50
-set yaw_srate = 40
+set roll_expo = 45
+set pitch_expo = 45
+set yaw_expo = 45
+set roll_srate = 72
+set pitch_srate = 72
+set yaw_srate = 54
 
 rateprofile 1
 
-# rateprofile 1 - STOCK (original BetaFPV rates)
-set rateprofile_name = Stock
+# rateprofile 1
+set rateprofile_name = Base 80
 set thr_mid = 45
 set thr_expo = 50
 set roll_rc_rate = 5
@@ -178,8 +138,23 @@ set yaw_expo = 45
 set roll_srate = 72
 set pitch_srate = 72
 set yaw_srate = 54
+set throttle_limit_type = SCALE
+set throttle_limit_percent = 80
 
 rateprofile 2
+
+# rateprofile 2
+set rateprofile_name = Base 60
+set roll_rc_rate = 16
+set pitch_rc_rate = 16
+set roll_expo = 45
+set pitch_expo = 45
+set yaw_expo = 45
+set roll_srate = 72
+set pitch_srate = 72
+set yaw_srate = 54
+set throttle_limit_type = SCALE
+set throttle_limit_percent = 60
 
 rateprofile 3
 
@@ -188,3 +163,18 @@ rateprofile 0
 
 # save configuration
 save
+# 
+# ---------------------------------------------------------------------------
+# Appended to the capture, not part of diff all. Taken 2026-09-29, same session.
+# serial and serialrx_provider are absent above because they equal the
+# BETAFPVG473 target defaults (SERIALRX_UART USART3, SERIALRX_PROVIDER CRSF).
+#
+# serial
+# serial 20 1 115200 57600 0 115200
+# serial 0 0 115200 57600 0 115200
+# serial 1 0 115200 57600 0 115200
+# serial 2 64 115200 57600 0 115200
+# serial 3 131073 115200 57600 0 115200
+#
+# get serialrx_provider
+# serialrx_provider = CRSF

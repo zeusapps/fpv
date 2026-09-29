@@ -1,3 +1,4 @@
+# 
 # diff all
 
 # version
@@ -35,6 +36,11 @@ aux 2 13 3 1700 2100 0 0
 aux 3 35 1 1700 2100 0 0
 aux 4 36 2 1700 2100 0 0
 
+# adjrange
+adjrange 0 0 4 900 1200 12 4 0 0
+adjrange 1 0 4 1375 1675 12 4 0 0
+adjrange 2 0 4 1800 2100 12 4 0 0
+
 # master
 set gyro_lpf1_static_hz = 0
 set gyro_lpf2_static_hz = 550
@@ -43,13 +49,15 @@ set dyn_notch_q = 400
 set dyn_notch_min_hz = 150
 set dyn_notch_max_hz = 300
 set gyro_lpf1_dyn_min_hz = 0
-set acc_calibration = -17621,-71,65,1
+set acc_calibration = -30382,2,57,1
 set baro_hardware = NONE
 set dshot_bidir = ON
 set dshot_bitbang = AUTO
 set motor_pwm_protocol = DSHOT300
 set motor_poles = 12
-set vbat_max_cell_voltage = 435
+set vbat_max_cell_voltage = 450
+set vbat_min_cell_voltage = 320
+set vbat_warning_cell_voltage = 333
 set ibata_scale = 550
 set ibata_offset = -100
 set small_angle = 180
@@ -62,10 +70,10 @@ set osd_link_quality_pos = 2497
 set osd_rssi_dbm_pos = 2465
 set osd_rsnr_pos = 160
 set osd_tim_1_pos = 386
-set osd_tim_2_pos = 2177
+set osd_tim_2_pos = 2145
 set osd_remaining_time_estimate_pos = 33
-set osd_flymode_pos = 2113
-set osd_throttle_pos = 2145
+set osd_flymode_pos = 2049
+set osd_throttle_pos = 2113
 set osd_vtx_channel_pos = 33
 set osd_crosshairs_pos = 272
 set osd_ah_sbar_pos = 314
@@ -85,6 +93,7 @@ set osd_esc_rpm_pos = 150
 set osd_core_temp_pos = 225
 set osd_stick_overlay_left_pos = 2506
 set osd_stick_overlay_right_pos = 2524
+set osd_rate_profile_name_pos = 2081
 set osd_sys_vtx_temp_pos = 2369
 set debug_mode = GYRO_SCALED
 set craft_name = m75 pro
@@ -119,7 +128,7 @@ set thrust_linear = 30
 set feedforward_averaging = 2_POINT
 set feedforward_smooth_factor = 60
 set feedforward_jitter_factor = 10
-set dyn_idle_min_rpm = 75
+set dyn_idle_min_rpm = 30
 set simplified_master_multiplier = 120
 set simplified_i_gain = 90
 set simplified_d_gain = 120
@@ -133,38 +142,51 @@ set tpa_rate = 80
 
 profile 1
 
-# profile 1
-set crash_recovery = ON
-
 profile 2
 
 profile 3
 
 # restore original profile selection
-profile 1
+profile 0
 
 rateprofile 0
 
 # rateprofile 0
-set rateprofile_name = Beginner
+set rateprofile_name = Cine
 set thr_mid = 45
 set thr_expo = 65
-set roll_rc_rate = 5
-set pitch_rc_rate = 5
-set yaw_rc_rate = 5
-set roll_expo = 65
-set pitch_expo = 65
-set yaw_expo = 55
-set roll_srate = 50
-set pitch_srate = 50
+set roll_rc_rate = 4
+set pitch_rc_rate = 4
+set yaw_rc_rate = 4
+set roll_expo = 45
+set pitch_expo = 45
+set yaw_expo = 40
+set roll_srate = 45
+set pitch_srate = 45
 set yaw_srate = 40
 
 rateprofile 1
 
 # rateprofile 1
-set rateprofile_name = Stock
+set rateprofile_name = Park
 set thr_mid = 45
-set thr_expo = 50
+set thr_expo = 65
+set roll_rc_rate = 5
+set pitch_rc_rate = 5
+set yaw_rc_rate = 5
+set roll_expo = 50
+set pitch_expo = 50
+set yaw_expo = 45
+set roll_srate = 60
+set pitch_srate = 60
+set yaw_srate = 54
+
+rateprofile 2
+
+# rateprofile 2
+set rateprofile_name = Base
+set thr_mid = 45
+set thr_expo = 65
 set roll_rc_rate = 5
 set pitch_rc_rate = 5
 set yaw_rc_rate = 5
@@ -175,8 +197,6 @@ set roll_srate = 72
 set pitch_srate = 72
 set yaw_srate = 54
 
-rateprofile 2
-
 rateprofile 3
 
 # restore original rateprofile selection
@@ -184,3 +204,4 @@ rateprofile 0
 
 # save configuration
 save
+# 

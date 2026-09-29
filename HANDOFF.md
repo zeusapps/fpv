@@ -17,7 +17,7 @@ number — `HANDOFF.md` under *GPS Rescue*, not "item 2".
 | Aircraft | Status |
 |---|---|
 | **Pavo20 Pro II** | Flying. Rewired 2026-09-01; moved to the UBLOX GPS provider 2026-09-03. Active work is here. |
-| **Meteor75 Pro** | Stable, documented, no outstanding work. |
+| **Meteor75 Pro** | Configs rewritten 2026-09-29 after the aircraft was found to match no committed file. **Not yet flown** on the new config. |
 | **FireFly25** | Bare defaults capture only. Not actively worked on. |
 | **Radio (V12 MAX)** | GPSQR widget bench-verified 2026-09-03. Field checks outstanding; two known defects, one accepted, one open. |
 
@@ -275,7 +275,68 @@ per-model path would fix it. **Decided 2026-09-03 not to do it.** The operating 
 `LIVE` or an age, treat `SAVED` as "some aircraft's last position". Written up in
 `radio/README.md`. Reopen if the widget is ever relied on across more than one model in a session.
 
-### 3. Decide about the MCU ID in git history
+### 3. Meteor75 — configs rewritten, not yet flown
+
+On 2026-09-29 the Meteor75 was reported "way too sharp, no range for smooth turns" in Acro. A
+`diff all` showed the aircraft matched no file in the repo: rate profile 0 had Center Sensitivity
+1150 °/s against a 720 °/s max (a straight-line curve, expo disabled — 115 °/s at 10 % stick), and
+PID profile 0 had been reset to firmware defaults, losing BetaFPV's GF 40mm tune. Both happened in
+the Configurator; nothing in the repo could have noticed. Change `align-meteor75-with-aircraft`
+replaced the three old configs with `M75_PRO_ELRS_V1.txt` and `M75_PRO_SBUS_V1.txt`: GF 40mm
+restored verbatim, Cine / Park / Base rate profiles on CH9, `vbat_max_cell_voltage = 450` for the
+LiHV packs, no `acc_calibration`. The aircraft as found is
+`meteor75-pro/dumps/BTFL_cli_backup_M75_PRO_20260929_BETAFPVG473 - as found.txt`. The ELRS file was
+pasted and levelled the same evening; the round-trip `diff all` (` - current`) matched it exactly,
+apart from `mcu_id`, `signature`, the new `acc_calibration` and the pinned defaults `serial 0 0`,
+`serial 2 64` and `serialrx_provider = CRSF`, which `diff all` never prints.
+
+Outstanding, all by the pilot — see the change's `design.md` under *Open Questions*:
+
+- **Bench battery check.** A freshly charged Lava LiHV pack must show as 1S on plug-in, with
+  `GF 40mm` active.
+- **Fly it.** Angle hover, then Acro on CH9 low / mid / high. Pass: small centre-stick inputs give
+  slow rotation on all three, no oscillation, motors not hot after a pack. Park's curve is a
+  midpoint chosen for comparison, not a published value — change any curve in a new versioned file.
+- **Dynamic idle.** Restored to the factory `30` (not the unexplained `75` of the old V1 files).
+  Check throttle chops and power loops; raise it only as a separate change.
+- **SBUS variant untested.** Reproduces the factory receiver setup (UART1 / PA10). Test when the DJI
+  RC is next used: Receiver tab shows CH1–CH9 as the AUX table expects, bench-arm props off.
+- **Physical pads** for UART1 RX (PA10) and UART3 RX (PB11) are not recorded.
+
+**Accelerometer X axis — probable hardware fault. Angle mode cannot be trusted after a crash.**
+`acc_calibration` stores the average of 400 readings taken level and still, as X, Y, Z-minus-1 g
+and a done flag (`performAcclerationCalibration`, `sensors/acceleration_init.c:442-474` at 4.5.1).
+On this board's ICM-42688P 1 g is 2048 counts (`accgyro_spi_icm426xx.c:204`, 16 g range):
+
+```
+acc_calibration       X                  Y              Z (minus 1 g)
+factory 2026-01-30    24      0.01 g     15    0.01 g   46   0.02 g
+V1 files (undated)    -12851  -6.3 g     -6    0.00 g   14   0.01 g
+as found 2026-09-29   -17621  -8.6 g     -71  -0.03 g   65   0.03 g
+after paste 09-29     -30382  -14.8 g    2     0.00 g   57   0.03 g
+re-levelled 09-29     -21126  -10.3 g    0     0.00 g   56   0.03 g
+```
+
+Y and Z are healthy and consistent — Z reading 1.03 g is gravity, which also confirms the scale.
+X reading 6–15 g on a stationary quad is not physical, and no board tilt could produce it (a
+90° misalignment moves gravity by 1 g). Its zero jumps between levellings. The pilot reports, on
+2026-09-29, that Angle mode flies wrongly after crashes and that the Setup tab sometimes shows the
+quad tilted when it is level; they had been flying with the OSD horizon to compensate. Consistent
+with impact damage to the X channel of the IMU. At −14.8 g the offset left 1.2 g before the 16 g
+clip, so X readings were saturating.
+
+This is not yet proven: the pilot confirmed the Sensors-tab accelerometer is live but has not
+reported a tilt test per axis. **What settles it:** after the next crash, `get acc_calibration`,
+then Calibrate Accelerometer, then `get acc_calibration` again. A jump of thousands of counts in X
+confirms it.
+
+Until the board is replaced: Acro is unaffected (the accelerometer does not fly Acro). After any
+crash, check the Setup tab on a flat surface before flying and recalibrate if the model is not
+level; do not rely on Angle for take-off or landing until that check has been done. The real fix is
+a replacement flight controller — paste `M75_PRO_ELRS_V1.txt`, calibrate, and expect X within a few
+hundred counts of 0, as the factory board read.
+
+### 4. Decide about the MCU ID in git history
 
 `mcu_id` was redacted from `pavo20-pro-ii/HARDWARE.md` on 2026-09-03, but it was committed in plain
 text in `20b4f45` and is still reachable there. The working tree is clean.
@@ -288,15 +349,14 @@ to do is assume it is gone because the current files look clean.
 Keep the habit that caught it: `git grep <the id>` across tracked files before committing anything
 captured off the aircraft.
 
-### 4. Known gap: the rest of the fleet still commits calibration
+### 5. Known gap: the FireFly25 still commits calibration
 
-`M75_hello_radio_v12.txt`, `M75_PRO_CLAUDE_CODE_V1.txt`, `M75_PRO_RADIOMASTER_POCKET_V1.txt` and
-the FireFly25 defaults capture all carry `acc_calibration` — the defect the Pavo20 configs were
-just cleaned of. The Meteor75 is recorded as stable and was not touched on the strength of a
-finding from another aircraft. Promoting the requirement to a fleet-wide capability is the natural
-follow-up if the Pavo20 change proves out.
+The FireFly25 defaults capture carries `acc_calibration` — the defect the Pavo20 configs were
+cleaned of on 2026-09-03 and the Meteor75 configs on 2026-09-29. The Meteor75 now has its own
+`meteor75-pro/flight-config` spec with the same rule. Promoting it to a fleet-wide capability is
+the natural follow-up once both aircraft have flown on their new configs.
 
-### 5. Delete the superseded folders
+### 6. Delete the superseded folders
 
 `D:\Code\Meteor75`, `D:\Code\FireFly25` and `D:\Code\Pavo20Pro2` were copied into this repo and
 left in place as a fallback. Remove them once this repo is confirmed good. The original
@@ -306,6 +366,19 @@ left in place as a fallback. Remove them once this repo is confirmed good. The o
 
 Keep these in mind before diagnosing anything similar. Each of these looked like a fault and was
 not, or looked like one fault and was another.
+
+**Center Sensitivity at or above Max Rate switches expo off.** In Actual rates, expo only scales
+`MAX(0, srate*10 - rc_rate*10)` (`applyActualRates`, `fc/rc.c:209-219` at 4.5.1). When the centre
+reaches the max, that term is zero and the curve is a straight line through the *centre* value at
+full stick — the configured max is ignored too. The Meteor75's 1150 / 720 profile was that. The
+Configurator shows the two fields side by side in °/s, which is how it got set.
+
+**`vbat_max_cell_voltage` gates battery detection, not just the cell count.** At 4.5.1
+`isVoltageFromBattery` (`sensors/battery.c:190-197`) treats a reading as a battery only if it is at
+or below this value, or above 6.00 V. A 1S LiHV pack above it is *not present* — no cell count, no
+warnings, no PID-profile auto-select — until it sags into range, possibly in flight. A reading
+exactly equal to it counts as 2S (`battery.c:210`). The firmware default 430 and the Meteor75's old
+435 both fail on a fresh 4.35 V pack; the Meteor runs 450.
 
 **GPS and the air unit shared a pin.** The Cube G4 routes the O4's SBUS output to `RX1 (PA10)`.
 The GPS module's TX had been soldered to that same pad, following BetaFPV's own GPS guide — which

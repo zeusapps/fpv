@@ -1,0 +1,268 @@
+# Meteor75 Pro 1S (BETAFPVG473, Betaflight 4.5.1) - ELRS / HelloRadio V12 MAX
+#
+# Base:  the aircraft as captured 2026-09-29 (dumps/..._20260929_... - current.txt)
+#        with BetaFPV's factory GF 40mm PID profile restored from the 2026-01-30 dump.
+# Adds:  Cine / Park / Base rate profiles on CH9, LiHV battery ceiling, factory
+#        low-voltage thresholds. See openspec/changes/align-meteor75-with-aircraft.
+#
+# Receiver: ELRS (CRSF) on UART3. For the DJI RC over the air unit's SBUS, paste
+# M75_PRO_SBUS_V1.txt instead - the two files differ only in the receiver block.
+#
+# AFTER PASTING: re-run Calibrate Accelerometer. Do not fly without it.
+# Then take a fresh diff all and compare it with this file (README, "Applying a config").
+#
+# Paste in chunks - the Configurator CLI drops lines from large pastes.
+#
+# NOTE: profile_name and rateprofile_name are limited to 8 characters. Longer names
+# fail with "STRING MUST BE 1-8 CHARACTERS" and abort the whole batch at save.
+
+batch start
+
+defaults nosave
+
+board_name BETAFPVG473
+manufacturer_id BEFH
+
+# name: m75 pro
+
+# feature
+feature OSD
+
+# serial
+# UART1 (0) off  (default; written so the ELRS and SBUS files differ visibly)
+# UART2 (1) off  (board default is SmartAudio; this airframe has none)
+# UART3 (2) ELRS receiver, CRSF - RX pin PB11
+# UART4 (3) DJI air unit: MSP + VTX_MSP
+#
+# serial 2 64 and serialrx_provider = CRSF BOTH equal the BETAFPVG473 target default at
+# 4.5.1 (config.h: SERIALRX_UART SERIAL_PORT_USART3, SERIALRX_PROVIDER SERIALRX_CRSF).
+# They are pinned here deliberately: they decide whether the aircraft has a receiver at
+# all, the SBUS variant changes both, and a default never appears in diff all - so their
+# absence would look identical to a line dropped by a chunked paste.
+serial 0 0 115200 57600 0 115200
+serial 1 0 115200 57600 0 115200
+serial 2 64 115200 57600 0 115200
+serial 3 131073 115200 57600 0 115200
+
+# beacon
+beacon RX_LOST
+beacon RX_SET
+
+# aux
+# CH5 high       = ARM
+# CH6 low        = ANGLE     mid = ACRO     high = TURTLE
+# CH7 high       = PREARM    <-- quad will NOT arm without this
+# CH8 high       = BEEPER
+# CH9 low/mid/high selects rate profile 0/1/2 (Cine/Park/Base) via adjrange
+aux 0 0 0 1700 2100 0 0
+aux 1 1 1 900 1300 0 0
+aux 2 13 3 1700 2100 0 0
+aux 3 35 1 1700 2100 0 0
+aux 4 36 2 1700 2100 0 0
+
+# adjrange - rate profile select on CH9, one line per switch third.
+# rc_adjustments.c (4.5.1): position = (CH9 - 900) / 400, so low/mid/high = profile 0/1/2.
+# The quad beeps 1/2/3 times on change.
+adjrange 0 0 4 900 1200 12 4 0 0
+adjrange 1 0 4 1375 1675 12 4 0 0
+adjrange 2 0 4 1800 2100 12 4 0 0
+
+# master
+set gyro_lpf1_static_hz = 0
+set gyro_lpf2_static_hz = 550
+set dyn_notch_count = 1
+set dyn_notch_q = 400
+set dyn_notch_min_hz = 150
+set dyn_notch_max_hz = 300
+set gyro_lpf1_dyn_min_hz = 0
+
+# airframe levelling is DELIBERATELY ABSENT from this file. acc_calibration describes
+# how the board sits in this airframe at the moment it was levelled, and the committed
+# Meteor files had carried three different values with nothing saying which was current.
+# diff all only writes what it names, so leaving it out means pasting this file cannot
+# overwrite a good calibration with a stale one.
+# After pasting: Configurator > Setup > Calibrate Accelerometer, quad level. Required.
+
+set baro_hardware = NONE
+# CRSF is the target default - pinned deliberately, see the serial block above
+set serialrx_provider = CRSF
+set dshot_bidir = ON
+set dshot_bitbang = AUTO
+set motor_pwm_protocol = DSHOT300
+set motor_poles = 12
+
+# Battery - Lava 2 LiHV 1S, 580 / 680 mAh, 4.35 V full charge.
+# vbat_max_cell_voltage MUST stay above a fresh pack's resting voltage. At 4.5.1 a 1S
+# reading above it counts as NO battery (battery.c isVoltageFromBattery), and a reading
+# exactly equal to it counts as 2S (battery.c:210). 435 fails on LiHV; 450 was found on
+# the aircraft and leaves 0.15 V of margin.
+# min / warning are BetaFPV's factory values; the firmware defaults are 330 / 350.
+set vbat_max_cell_voltage = 450
+set vbat_min_cell_voltage = 320
+set vbat_warning_cell_voltage = 333
+set ibata_scale = 550
+set ibata_offset = -100
+set small_angle = 180
+set pid_process_denom = 2
+set simplified_gyro_filter = OFF
+
+# OSD - layout as on the aircraft 2026-09-29. Values below 2048 are hidden.
+set osd_rssi_dbm_alarm = -100
+set osd_vbat_pos = 2561
+set osd_rssi_pos = 192
+set osd_link_quality_pos = 2497
+set osd_rssi_dbm_pos = 2465
+set osd_rsnr_pos = 160
+set osd_tim_1_pos = 386
+set osd_tim_2_pos = 2145
+set osd_remaining_time_estimate_pos = 33
+set osd_flymode_pos = 2049
+set osd_throttle_pos = 2113
+set osd_vtx_channel_pos = 33
+set osd_crosshairs_pos = 272
+set osd_ah_sbar_pos = 314
+set osd_ah_pos = 2149
+set osd_current_pos = 2592
+set osd_mah_drawn_pos = 2625
+set osd_craft_name_pos = 2579
+set osd_home_dist_pos = 98
+set osd_flight_dist_pos = 130
+set osd_warnings_pos = 14709
+set osd_avg_cell_voltage_pos = 44
+set osd_pit_ang_pos = 2433
+set osd_rol_ang_pos = 2401
+set osd_disarmed_pos = 267
+set osd_esc_tmp_pos = 129
+set osd_esc_rpm_pos = 150
+set osd_core_temp_pos = 225
+set osd_stick_overlay_left_pos = 2506
+set osd_stick_overlay_right_pos = 2524
+set osd_rate_profile_name_pos = 2081
+set osd_sys_vtx_temp_pos = 2369
+
+set debug_mode = GYRO_SCALED
+set craft_name = m75 pro
+
+profile 0
+
+# profile 0 - BetaFPV's factory GF 40mm tune, verbatim from the 2026-01-30 dump.
+# auto_profile_cell_count = 1 makes a 1S pack select this profile on connect.
+# Profiles 1-3 are left at defaults, which carry the STAY value: the file must END on
+# profile 0, because a quad left on a STAY profile is never moved off it (config.c:845).
+set profile_name = GF 40mm
+set dterm_lpf1_dyn_min_hz = 82
+set dterm_lpf1_dyn_max_hz = 165
+set dterm_lpf1_static_hz = 82
+set dterm_lpf2_static_hz = 165
+set vbat_sag_compensation = 100
+set anti_gravity_gain = 50
+set iterm_relax_type = GYRO
+set throttle_boost = 0
+set p_pitch = 64
+set i_pitch = 103
+set d_pitch = 67
+set f_pitch = 42
+set p_roll = 64
+set i_roll = 103
+set d_roll = 48
+set f_roll = 43
+set p_yaw = 64
+set i_yaw = 103
+set f_yaw = 43
+set d_min_roll = 43
+set d_min_pitch = 58
+set auto_profile_cell_count = 1
+set thrust_linear = 30
+set feedforward_averaging = 2_POINT
+set feedforward_smooth_factor = 60
+set feedforward_jitter_factor = 10
+set dyn_idle_min_rpm = 30
+set simplified_master_multiplier = 120
+set simplified_i_gain = 90
+set simplified_d_gain = 120
+set simplified_pi_gain = 120
+set simplified_dmax_gain = 40
+set simplified_feedforward_gain = 30
+set simplified_pitch_d_gain = 120
+set simplified_pitch_pi_gain = 95
+set simplified_dterm_filter_multiplier = 110
+set tpa_rate = 80
+
+profile 1
+
+profile 2
+
+profile 3
+
+# restore original profile selection
+profile 0
+
+# Rate profiles - ACTUAL rates (4.5.1 default). rc_rate = centre sensitivity / 10,
+# srate = max rate / 10, expo / 100. rc_rate MUST stay below srate: at or above it,
+# rc.c applyActualRates clamps the expo term to zero and the curve goes linear.
+# That is what made the 2026-09-29 profile fly at 115 deg/s at 10% stick.
+#
+#   deg/s at stick %      10   20   30   40   50   60   70   80   90  100
+#   Cine  roll/pitch       6   17   32   53   79  114  160  225  317  450
+#   Park  roll/pitch       8   21   40   65   98  142  202  288  414  600
+#   Base  roll/pitch       9   25   48   80  122  177  251  355  504  720
+#
+# Same throttle curve on all three, full throttle: CH9 changes stick authority only.
+
+rateprofile 0
+
+# rateprofile 0 - CINE (CH9 low). Same numbers as the Pavo20's Cine, so centre-stick
+# feel carries between aircraft. Cruising around the tree.
+set rateprofile_name = Cine
+set thr_mid = 45
+set thr_expo = 65
+set roll_rc_rate = 4
+set pitch_rc_rate = 4
+set yaw_rc_rate = 4
+set roll_expo = 45
+set pitch_expo = 45
+set yaw_expo = 40
+set roll_srate = 45
+set pitch_srate = 45
+set yaw_srate = 40
+
+rateprofile 1
+
+# rateprofile 1 - PARK (CH9 mid). A midpoint chosen for comparison, not a published value.
+set rateprofile_name = Park
+set thr_mid = 45
+set thr_expo = 65
+set roll_rc_rate = 5
+set pitch_rc_rate = 5
+set yaw_rc_rate = 5
+set roll_expo = 50
+set pitch_expo = 50
+set yaw_expo = 45
+set roll_srate = 60
+set pitch_srate = 60
+set yaw_srate = 54
+
+rateprofile 2
+
+# rateprofile 2 - BASE (CH9 high). BetaFPV's stock whoop curve from the factory dump.
+# Power loops and rolls.
+set rateprofile_name = Base
+set thr_mid = 45
+set thr_expo = 65
+set roll_rc_rate = 5
+set pitch_rc_rate = 5
+set yaw_rc_rate = 5
+set roll_expo = 45
+set pitch_expo = 45
+set yaw_expo = 45
+set roll_srate = 72
+set pitch_srate = 72
+set yaw_srate = 54
+
+rateprofile 3
+
+# restore original rateprofile selection
+rateprofile 0
+
+# save configuration
+save
