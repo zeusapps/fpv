@@ -104,7 +104,7 @@ aircraft.
 ## Accelerometer — check after every crash
 
 This board's accelerometer X axis has a zero point that shifts on impact (probable hardware
-fault, recorded in `HANDOFF.md` under *Meteor75 — configs rewritten, not yet flown*). After a
+fault, recorded in `HANDOFF.md` under *Meteor75 — configs rewritten, flying, checks outstanding*). After a
 crash, Angle mode may hold the wrong "level" and the quad will lean or drift.
 
 After any crash, before the next flight:

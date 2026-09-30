@@ -234,7 +234,7 @@ who does it. All tests are performed by the pilot.
    they carry no `acc_calibration` — but the spec scenario *Pasting onto a levelled aircraft*
    assumes a sensor worth levelling. Settled by recording `get acc_calibration` before and after
    recalibrating following the next crash; a jump of thousands of counts in X confirms it. Full
-   record in `HANDOFF.md` under *Meteor75 — configs rewritten, not yet flown*. Fix is hardware.
+   record in `HANDOFF.md` under *Meteor75 — configs rewritten, flying, checks outstanding*. Fix is hardware.
 8. **How the tune was lost.** The pilot believes it happened while changing things in the
    Configurator. Not recoverable and not needed for the fix; the capture requirement is what
    prevents a repeat.

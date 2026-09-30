@@ -21,12 +21,12 @@
 
 - [x] 4.1 Paste `M75_PRO_ELRS_V1.txt` in chunks, `save`, then Setup > Calibrate Accelerometer with the quad level. Verify: no CLI error lines; the aircraft reboots
 - [x] 4.2 Take a fresh `diff all` and compare with the ELRS file. Verify: differences are only `acc_calibration`, `mcu_id`, `signature`, comments, and the pinned defaults `diff all` never prints (`serial 0 0`, `serial 2 64`, `serialrx_provider = CRSF`, empty `profile 1`-`3`); commit it redacted as the new `current` capture
-- [ ] 4.3 Plug in a freshly charged Lava LiHV pack, disarmed. Verify: OSD shows a 1S voltage immediately, `status` shows PID profile `GF 40mm` active, and cycling CH9 low/mid/high gives 1/2/3 beeps and switches the OSD rate profile name through Cine/Park/Base
+- [x] 4.3 Plug in a freshly charged Lava LiHV pack, disarmed. Verify: OSD shows a 1S voltage immediately, `status` shows PID profile `GF 40mm` active, and cycling CH9 low/mid/high switches the OSD rate profile name through Cine/Park/Base (the 1/2/3 beeps are masked by the radio's sound effects). 2026-09-30: switching confirmed in flight by feel; battery voltage on plug-in checked by the pilot, "everything was as expected"
 
 ## 5. Flight (pilot)
 
-- [ ] 5.1 Hover in Angle, then fly Acro on CH9 low, mid and high. Verify: no oscillation; small centre-stick inputs give slow rotation on all three; motors not hot after a pack. Record the outcome and date in `HANDOFF.md` (design Open Questions 1–2)
-- [ ] 5.2 Throttle chops and power loops on Base. Verify: the quad holds attitude at zero throttle without bobbing (Open Question 3); if not, note it for a separate dynamic-idle change rather than editing V1
+- [x] 5.1 Hover in Angle, then fly Acro on CH9 low, mid and high. Verify: no oscillation; small centre-stick inputs give slow rotation on all three; motors not hot after a pack. Record the outcome and date in `HANDOFF.md` (design Open Questions 1–2). 2026-09-30: six packs flown on all three positions, no notable oscillation in wind, Angle take-off and landing fine; motor temperature not checked — closed by the pilot 2026-09-30 without that check
+- [x] 5.2 Throttle chops and power loops on Base. Verify: the quad holds attitude at zero throttle without bobbing (Open Question 3); if not, note it for a separate dynamic-idle change rather than editing V1. 2026-09-30: pilot reports no complaints
 
 ## 6. SBUS variant (pilot, when the DJI RC is next used)
 

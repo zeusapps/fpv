@@ -17,7 +17,7 @@ number — `HANDOFF.md` under *GPS Rescue*, not "item 2".
 | Aircraft | Status |
 |---|---|
 | **Pavo20 Pro II** | Flying. Rewired 2026-09-01; moved to the UBLOX GPS provider 2026-09-03. Active work is here. |
-| **Meteor75 Pro** | Configs rewritten 2026-09-29 after the aircraft was found to match no committed file. **Not yet flown** on the new config. |
+| **Meteor75 Pro** | Configs rewritten 2026-09-29 after the aircraft was found to match no committed file. Flown 2026-09-30, six packs, pilot reports it much better. SBUS variant untested; accelerometer suspect. |
 | **FireFly25** | Bare defaults capture only. Not actively worked on. |
 | **Radio (V12 MAX)** | GPSQR widget bench-verified 2026-09-03. Field checks outstanding; two known defects, one accepted, one open. |
 
@@ -275,7 +275,7 @@ per-model path would fix it. **Decided 2026-09-03 not to do it.** The operating 
 `LIVE` or an age, treat `SAVED` as "some aircraft's last position". Written up in
 `radio/README.md`. Reopen if the widget is ever relied on across more than one model in a session.
 
-### 3. Meteor75 — configs rewritten, not yet flown
+### 3. Meteor75 — configs rewritten, flying, checks outstanding
 
 On 2026-09-29 the Meteor75 was reported "way too sharp, no range for smooth turns" in Acro. A
 `diff all` showed the aircraft matched no file in the repo: rate profile 0 had Center Sensitivity
@@ -290,15 +290,28 @@ pasted and levelled the same evening; the round-trip `diff all` (` - current`) m
 apart from `mcu_id`, `signature`, the new `acc_calibration` and the pinned defaults `serial 0 0`,
 `serial 2 64` and `serialrx_provider = CRSF`, which `diff all` never prints.
 
+**Flown 2026-09-30**, six packs, outdoors in wind. Pilot's report: the new setup "feels very good —
+much better than with 1150 degrees".
+
+- All three CH9 positions flown, and the pilot felt the difference between them, so rate-profile
+  switching works in flight. The confirmation beeps could not be heard over the radio's own sound
+  effects.
+- Base was used most. Cine felt "a bit underpowered" in the wind. It is not: all three profiles
+  have the same throttle curve and no throttle limit, so thrust is identical. Cine rotates more
+  slowly for the same stick (79 vs 122 °/s at half stick, 450 vs 720 °/s at full), so corrections
+  against gusts arrive later. Expected behaviour, not a fault; recorded so it is not re-diagnosed.
+- No notable oscillation, allowing for the wind. Motor temperature was not checked; the pilot
+  closed that check on 2026-09-30, to be reopened only if something feels or smells wrong.
+- Power loops and throttle chops on the restored dynamic idle (`30`): no complaints.
+- Battery on plug-in checked by the pilot: "everything was as expected", confirming
+  `vbat_max_cell_voltage = 450` detects a fresh LiHV pack.
+- Angle used for take-off and landing with no levelling problems. No crash was reported, so this
+  says nothing about the accelerometer fault below, which appears after impacts.
+
 Outstanding, all by the pilot — see the change's `design.md` under *Open Questions*:
 
-- **Bench battery check.** A freshly charged Lava LiHV pack must show as 1S on plug-in, with
-  `GF 40mm` active.
-- **Fly it.** Angle hover, then Acro on CH9 low / mid / high. Pass: small centre-stick inputs give
-  slow rotation on all three, no oscillation, motors not hot after a pack. Park's curve is a
-  midpoint chosen for comparison, not a published value — change any curve in a new versioned file.
-- **Dynamic idle.** Restored to the factory `30` (not the unexplained `75` of the old V1 files).
-  Check throttle chops and power loops; raise it only as a separate change.
+- **Curves.** Park's curve is a midpoint chosen for comparison, not a published value. If Base
+  becomes the everyday profile, a softer-centred Base is a candidate — as a new versioned file.
 - **SBUS variant untested.** Reproduces the factory receiver setup (UART1 / PA10). Test when the DJI
   RC is next used: Receiver tab shows CH1–CH9 as the AUX table expects, bench-arm props off.
 - **Physical pads** for UART1 RX (PA10) and UART3 RX (PB11) are not recorded.
