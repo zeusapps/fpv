@@ -20,6 +20,7 @@ number — `HANDOFF.md` under *GPS Rescue*, not "item 2".
 | **Meteor75 Pro** | Configs rewritten 2026-09-29 after the aircraft was found to match no committed file. Flown 2026-09-30, six packs, pilot reports it much better. SBUS variant untested; accelerometer suspect. |
 | **FireFly25** | Bare defaults capture only. Not actively worked on. |
 | **Radio (V12 MAX)** | GPSQR widget bench-verified 2026-09-03. Field checks outstanding; two known defects, one accepted, one open. |
+| **Radio (Oxbot R1)** | On trial against the V12 from 2026-09-30. Linked to both aircraft by binding phrase. Both aircraft bench-checked and flown on it (2026-10-01). Rescue switch works; R1 has alarms. |
 
 ## Pavo20 Pro II — current configuration
 
@@ -103,7 +104,7 @@ This distinction matters more than usual — these configs fly real hardware.
 
 ## Outstanding work
 
-### 1. GPS Rescue — configured, untested, do not trust yet
+### 1. GPS Rescue — came home once, oscillating, do not trust yet
 
 The config is now **two files**, split 2026-09-03 because the halves carry different risk:
 
@@ -208,6 +209,34 @@ ends in motors stopping, which matches what was seen.
 beyond `gps_rescue_min_start_dist` — 25–30 m — with the hover throttle measured and the log
 running. Bands tabulated in `FAILSAFE.md` under *Where you can and cannot trigger a rescue*.
 
+**Second field trigger, 2026-10-01, on the Oxbot R1: it came home.** Switch-triggered on SD. It
+climbed to about 30 m, flew back toward the pilot "bunny hopping" — oscillating in altitude — and
+began its descent over a tree, so the pilot flipped SD off and flew it manually; control returned
+at once. Whether it was logged is not known. `ap_hover_throttle` was still `1340`; the pilot's
+reading of hover on the same flight was **about 42% (`1420`)**, on a **4S 850 mAh** pack — larger
+than BetaFPV's recommended 4S 580/680 mAh (`pavo20-pro-ii/HARDWARE.md`), which the pilot thinks
+is too heavy for it.
+
+- **30 m and the tree are the configuration, not faults.** `MAX_ALT` returns at the highest
+  altitude of the power-up plus `initial_climb = 10` m (`gps_rescue_multirotor.c:186-188`, and see
+  below on `maxAltitudeCm` carrying across arms), so the flight had peaked near 20 m. Descent starts
+  once within `min(0.5 × start distance, descent_dist = 15 m)` of home (`:175`, `:809-810`) and
+  slopes toward the home point, which with `gps_set_home_point_once = ON` is where the aircraft was
+  **first** armed on this battery. Anything tall within ~15 m of that point is in the path. Field
+  rule: first arm of a pack from a spot with clear space around it.
+- **The hopping is not diagnosed.** Leading suspect: the hover baseline. The altitude controller
+  adds P, I (capped ±200), D and F around `ap_hover_throttle` (`autopilot_multirotor.c:167-196`),
+  and the configured baseline sits ~80 below the reported hover, leaving the loop to make up the
+  difference. Alternatives not excluded: baro noise from prop wash in the ducts, and altitude gains
+  too aggressive for this airframe. `debug_mode = AUTOPILOT_ALTITUDE` logs the four terms
+  separately (`:214-217`) and would separate them.
+- **Next, cheapest first:** `set ap_hover_throttle = 1420` after confirming the hover figure on the
+  pack you will test with — the baseline is only right for the pack it was measured on, and 3S,
+  4S 680 and 4S 850 will each differ — then repeat the switch test.
+  `FAILSAFE.md` step 3 already says the measurement wins over the committed `1340`; the committed
+  file and the `configure-pavo20-gps-rescue` task that pins `1340` need updating when it is applied.
+  Failsafe stays on `DROP` until a rescue returns without oscillation.
+
 Two source findings came out of setting those, both of which corrected this repo:
 
 - **`gps_rescue_return_alt` is inert under `MAX_ALT`.** It is read only in the `FIXED_ALT` branch
@@ -286,7 +315,7 @@ replaced the three old configs with `M75_PRO_ELRS_V1.txt` and `M75_PRO_SBUS_V1.t
 restored verbatim, Cine / Park / Base rate profiles on CH9, `vbat_max_cell_voltage = 450` for the
 LiHV packs, no `acc_calibration`. The aircraft as found is
 `meteor75-pro/dumps/BTFL_cli_backup_M75_PRO_20260929_BETAFPVG473 - as found.txt`. The ELRS file was
-pasted and levelled the same evening; the round-trip `diff all` (` - current`) matched it exactly,
+pasted and levelled the same evening; the round-trip `diff all` (` - V1 applied`) matched it exactly,
 apart from `mcu_id`, `signature`, the new `acc_calibration` and the pinned defaults `serial 0 0`,
 `serial 2 64` and `serialrx_provider = CRSF`, which `diff all` never prints.
 
@@ -316,6 +345,20 @@ Outstanding, all by the pilot — see the change's `design.md` under *Open Quest
   RC is next used: Receiver tab shows CH1–CH9 as the AUX table expects, bench-arm props off.
 - **Physical pads** for UART1 RX (PA10) and UART3 RX (PB11) are not recorded.
 
+**Telemetry was off, and was enabled 2026-09-30.** The Oxbot R1 showed no `RxBt` for the Meteor75.
+`feature TELEMETRY` was absent from every capture of this aircraft, the 2026-01-30 factory original
+included, and at 4.5.1 the BETAFPVG473 target sets no default features, so no `RxBt`, `Curr`,
+`Capa` or `FM` ever reached any radio — the V12 included. The ELRS link stats still showed, which
+is what hid it. Enabled through the CLI and saved on 2026-09-30, without re-pasting the config, so
+the accelerometer calibration was untouched; `RxBt` appeared on the R1 immediately.
+`M75_PRO_ELRS_V1.txt` now carries `feature TELEMETRY`, and
+`dumps/BTFL_cli_backup_M75_PRO_20260930_BETAFPVG473 - current.txt`, captured 2026-09-30 after the
+change, matches it: the only differences are `mcu_id`, `signature`, `acc_calibration` and the
+pinned defaults `serial 0 0`, `serial 2 64` and `serialrx_provider = CRSF`. Against the previous
+capture (now ` - V1 applied`) it differs in exactly two lines: `feature TELEMETRY`, and
+`acc_calibration` — see the table below. Requirement: `meteor75-pro/flight-config`, "The ELRS config SHALL enable Betaflight telemetry"
+(`openspec/specs/meteor75-pro/flight-config/spec.md`).
+
 **Accelerometer X axis — probable hardware fault. Angle mode cannot be trusted after a crash.**
 `acc_calibration` stores the average of 400 readings taken level and still, as X, Y, Z-minus-1 g
 and a done flag (`performAcclerationCalibration`, `sensors/acceleration_init.c:442-474` at 4.5.1).
@@ -328,10 +371,29 @@ V1 files (undated)    -12851  -6.3 g     -6    0.00 g   14   0.01 g
 as found 2026-09-29   -17621  -8.6 g     -71  -0.03 g   65   0.03 g
 after paste 09-29     -30382  -14.8 g    2     0.00 g   57   0.03 g
 re-levelled 09-29     -21126  -10.3 g    0     0.00 g   56   0.03 g
+capture 09-30         -10643  -5.2 g     1     0.00 g   53   0.03 g
 ```
 
+The 09-30 row is from the capture taken after enabling telemetry. The pilot did not press
+Calibrate Accelerometer. At 4.5.1 power-on calibrates only the gyro (`fc/init.c:825`); the stored
+accelerometer zero is rewritten only by the Configurator button (`msp/msp.c:3285-3287`), a gimbal
+mixer (`init.c:821-823`, never on a quad), or the disarmed **stick command throttle high + yaw left
++ pitch down + roll centred**, held about 50 ms (`fc/rc_controls.c:230`, `:290-292`), and it saves
+itself on completion (`sensors/acceleration_init.c:468-470`). The most likely cause is that stick
+command, hit by accident: the pilot habitually rotates the sticks, with the aircraft powered and
+disarmed. Not proven — Betaflight logs no record of which trigger fired. The calibration it left
+is usable: on 2026-09-30 the Setup tab showed the quad level on a flat surface, and the pilot
+reports it flew well in Angle on the R1 the same day. No re-level was needed.
+
+What it says about the fault: a calibration taken still can move X by at most about 1 g
+(2048 counts) through tilt. This one moved it about 10,500 counts, 5 g, with Y and Z steady — the
+same X-only instability. It does not meet the "after a crash" test below, since no crash preceded
+it. **The habit that prevents the accidental case: do not stir the sticks with a quad powered and
+disarmed.** It applies equally to the Pavo20, whose GPS Rescue takes its level reference from this
+calibration.
+
 Y and Z are healthy and consistent — Z reading 1.03 g is gravity, which also confirms the scale.
-X reading 6–15 g on a stationary quad is not physical, and no board tilt could produce it (a
+X reading 5–15 g on a stationary quad is not physical, and no board tilt could produce it (a
 90° misalignment moves gravity by 1 g). Its zero jumps between levellings. The pilot reports, on
 2026-09-29, that Angle mode flies wrongly after crashes and that the Setup tab sometimes shows the
 quad tilted when it is level; they had been flying with the OSD horizon to compensate. Consistent
@@ -374,6 +436,41 @@ the natural follow-up once both aircraft have flown on their new configs.
 `D:\Code\Meteor75`, `D:\Code\FireFly25` and `D:\Code\Pavo20Pro2` were copied into this repo and
 left in place as a fallback. Remove them once this repo is confirmed good. The original
 `GPSQR_widget.zip` in `Downloads/` can go at the same time.
+
+### 7. Oxbot R1 — in use on both aircraft
+
+Second ELRS radio, on trial against the V12 MAX from 2026-09-30. It runs OXBOT OS, not EdgeTX, so
+the GPSQR widget and the logical-switch alarms do not carry over. Setup, mapping and bench check are
+in `radio/oxbot-r1/README.md`; the change is `openspec/changes/archive/2026-10-01-add-oxbot-r1-radio/`.
+
+**Verified 2026-09-30:** the R1 links to both the Pavo20 and the Meteor75 with the binding phrase
+entered on the radio, no receiver change. The fleet pairs by phrase only from now on.
+
+**Observed, before the R1 was remapped:** flipping SD beeped (SD is CH8 in the R1's default
+mapping), and an arm attempt on the Pavo20 failed. Indoors that is expected — the Pavo20 cannot arm
+without a GPS fix (`gps_rescue_allow_arming_without_fix = OFF`, `fc/core.c:400-406`), whatever
+PREARM is doing. Whether the Meteor75 also refused was not recorded.
+
+**Done 2026-09-30:** the R1's single model remapped (CH5 SA, CH6 SB, CH7 SF, CH8 SE, CH9 SC,
+CH10 SD), 250Hz, Telem Ratio 1:64, 250 mW, Model Match and Throttle Lock off; every switch checked
+on the R1's *View Channels*, SE confirmed latching. **Meteor75:** Receiver tab AUX1–AUX5 all as
+expected, grip test clean, armed on the bench, then flown.
+
+**Pavo20, 2026-09-30:** Receiver tab AUX1–AUX5 as expected, AUX6 follows SD, grip test clean.
+Refused to arm indoors with repeated beeps — expected without a fix — but `status` was not read.
+
+**2026-10-01, confirmed by the pilot:** SD up refuses arming; the R1 has alarms (thresholds not
+recorded); Find Drone works with a fix. Find Drone with **no** fix was left untested by choice —
+see `radio/oxbot-r1/README.md` for why `Sats` should still be checked before trusting a pin.
+
+**Flown 2026-10-01, both aircraft.** The Pavo20 armed outdoors once it had a fix — reached
+quickly, up to 32 satellites — consistent with `GPS` having been its only indoor block. Pilot's
+report: everything worked as expected, no problems noticed, motors not hot. A plain flight; it says
+nothing about a rescue or failsafe on the R1.
+
+Outstanding, in order:
+
+- A rescue test follows `pavo20-pro-ii/FAILSAFE.md`, *Testing on a switch*. It is not an R1 task.
 
 ## Facts that cost real time to establish
 

@@ -1,13 +1,15 @@
 # Meteor75 Pro 1S (BETAFPVG473, Betaflight 4.5.1) - SBUS / DJI RC via the air unit
 #
-# Base:  the aircraft as captured 2026-09-29 (dumps/..._20260929_... - current.txt)
+# Base:  the aircraft as captured 2026-09-29 (dumps/..._20260929_... - V1 applied.txt)
 #        with BetaFPV's factory GF 40mm PID profile restored from the 2026-01-30 dump.
 # Adds:  Cine / Park / Base rate profiles on CH9, LiHV battery ceiling, factory
 #        low-voltage thresholds. See openspec/changes/align-meteor75-with-aircraft.
 #
 # Receiver: SBUS from the DJI air unit on UART1, as BetaFPV shipped it (2026-01-30 dump).
 # For ELRS / the HelloRadio V12 MAX, paste M75_PRO_ELRS_V1.txt instead - the two files
-# differ only in the receiver block.
+# differ only in the receiver setup: the serial block, serialrx_provider, and
+# feature TELEMETRY, which the ELRS file sets and this one omits (SBUS carries no
+# telemetry back to the radio).
 #
 # UNTESTED. Never pasted by the pilot. Before flying: bind the DJI RC, check in the
 # Receiver tab that sticks move CH1-4 and that each switch moves CH5-CH9 as the aux

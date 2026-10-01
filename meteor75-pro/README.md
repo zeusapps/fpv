@@ -20,11 +20,13 @@ document disagrees with that capture, the capture is right.
 
 - `M75_PRO_ELRS_V1.txt` — flight config, ELRS / HelloRadio V12 MAX. **This is the one in use.**
 - `M75_PRO_SBUS_V1.txt` — flight config, SBUS / DJI RC via the air unit. Identical except for the
-  `serial` block and `serialrx_provider`. **Untested** — see its header before pasting.
+  `serial` block, `serialrx_provider`, and `feature TELEMETRY`, which only the ELRS file sets — SBUS
+  has no telemetry path back to the radio. **Untested** — see its header before pasting.
 - `BINDING_GUIDE.md` — binding a radio to the onboard ELRS receiver
 - `dumps/` — raw `diff all` captures, named with the date taken and a suffix saying what the
   state was: ` - original` (factory), ` - as found` (2026-09-29, before the V1 configs),
-  ` - current` (what is flying now). Exactly one carries
+  ` - V1 applied` (2026-09-29, the round-trip after pasting V1), ` - current` (what is flying
+  now). Exactly one carries
   ` - current`; retitle the previous one when a new capture replaces it.
 
 `M75_hello_radio_v12.txt`, `M75_PRO_CLAUDE_CODE_V1.txt` and `M75_PRO_RADIOMASTER_POCKET_V1.txt` were

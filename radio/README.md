@@ -1,20 +1,48 @@
-# Radio — HelloRadio V12 MAX
+# Radio
 
-Transmitter-side configuration. One radio flies all three aircraft, so anything here applies to
-the fleet; anything that differs per aircraft lives in that aircraft's folder and is linked from
-here rather than repeated.
+Transmitter-side configuration. Anything here applies to the whole fleet; anything that differs
+per aircraft lives in that aircraft's folder and is linked from here rather than repeated. Anything
+that differs per **radio** lives in that radio's folder.
+
+## Radios
+
+| Radio | Firmware | Document | Status |
+|---|---|---|---|
+| HelloRadio V12 MAX | EdgeTX | `v12-max/README.md` | The fleet's radio to date. |
+| Oxbot R1 | OXBOT OS | `oxbot-r1/README.md` | On trial from 2026-09-30. Linked to both aircraft; not yet bench-checked or flown. |
+| Radiomaster Pocket | — | not written up | |
+| DJI RC3 | — | not written up | DJI radios reach these aircraft over SBUS through the air unit — the `*_SBUS_V1.txt` configs — not over ELRS. |
+
+Every radio has to deliver the channels each aircraft's config reads, on the right kind of control.
+That rule, and how it is checked, is `../openspec/specs/radio/channel-mapping/spec.md`.
+
+**Most of this file was written for the V12 MAX and needs EdgeTX.** Those sections say so at the
+top. What is not marked applies to any ELRS radio.
 
 ```
 radio/
-  README.md               this file — widget install, telemetry, alarms, TX power
+  README.md               this file — shared material, plus the V12's widget, telemetry, alarms
+  v12-max/README.md       V12 switch assignment and ELRS link settings
+  oxbot-r1/README.md      R1 switch assignment, settings, bench check
   CODE_REVIEW.md          review of the GPSQR widget source
-  WIDGETS/GPSQR/main.lua  the widget itself
+  WIDGETS/GPSQR/main.lua  the widget itself (V12 / EdgeTX only)
 ```
+
+## Pairing
+
+Every radio pairs with every receiver through the fleet's **binding phrase**, entered on the radio.
+Receiver bind mode — power-cycling the receiver three times and pressing *Bind* on the radio — is
+not used. Decided 2026-09-30: a radio holding the phrase links to any receiver with no per-radio
+pairing step, and a new radio joins by entering it. Confirmed that day with the Oxbot R1 and both
+aircraft, with no change to either receiver.
 
 `WIDGETS/` mirrors the SD card layout. Copy the folder to the card root and the file lands at
 `/WIDGETS/GPSQR/main.lua`. Edit it here and copy to the card, not the other way round.
 
 ## GPSQR — the "find my drone" widget
+
+> **V12 MAX / EdgeTX only.** The Oxbot R1 has its own *Find Drone* instead — see
+> `oxbot-r1/README.md`.
 
 Shows the drone's last known GPS position as a QR code. Scan it with a phone camera and Google
 Maps opens with a pin on the drone.
@@ -132,6 +160,10 @@ yet.
 3. Radio → *Model settings → Telemetry → Delete all sensors → Discover new sensors*, with the drone
    powered. The list never refreshes by itself.
 
+Step 1 is the aircraft and applies whatever the radio. Steps 2 and 3 are the V12's EdgeTX menus; on
+the Oxbot R1, `Telem Ratio` is under Quick Settings → ELRS Lua and there is no sensor-discovery
+step described in its manual.
+
 Sensors that should appear:
 
 | Sensor | Meaning |
@@ -198,6 +230,9 @@ On a 1S drone pack voltage already equals cell voltage, so the alarm works there
 
 ### The alarm itself
 
+> **V12 MAX / EdgeTX only.** Whether the Oxbot R1 can alarm on `RxBt` at all is not yet known —
+> `oxbot-r1/README.md`, *What is not verified*. The thresholds above apply to any radio that can.
+
 Logical switches are per-model, so repeat this for each model on the radio.
 
 1. *Model settings → Logical Switches* → `L01`:
@@ -231,6 +266,8 @@ home") and treat 3.5 V as "land now".
 
 Consumed capacity is a more honest fuel gauge than voltage.
 
+Step 1 is the aircraft; steps 2 and 3 are V12 / EdgeTX.
+
 1. Betaflight → Power tab: set the pack's rated capacity so `Capa` and `Bat%` mean something.
 2. Radio → Logical Switch `L03`: `a > x`, V1 `Capa`, V2 ≈ 75–80 % of the pack (e.g. `600` for a
    750 mAh pack).
@@ -250,6 +287,11 @@ the tested procedure in one place.
 Nothing about rescue configuration belongs here. See below.
 
 ## Transmitter power and link warnings
+
+> **The power and `L02` steps are V12 MAX / EdgeTX.** The Oxbot R1 has fixed power levels and no
+> Dynamic setting in its manual — `oxbot-r1/README.md`, *Settings*. The diagnosis under *A switch
+> shows on the radio but not in Betaflight* is Betaflight-side and applies to any radio, apart from
+> its steps 2–3, which name EdgeTX screens.
 
 - `TPWR` shows current transmit power in mW. Put it on a widget if you want it visible.
 - Configure power in the **ExpressLRS Lua script**: set `Max Power` and turn `Dynamic` **ON**.
@@ -341,6 +383,10 @@ differ — `8ch` becomes CH1–8, `12ch` tops out at CH12, and the arm bit moves
 before trusting any of the above.
 
 ## Field workflow
+
+> Written for the V12 MAX: `SD Logs` and the GPSQR widget are EdgeTX. On the Oxbot R1, steps 1–3
+> below use Quick Settings → *Find Drone* instead, and checking `Sats` before trusting its pin
+> matters until it has been shown to refuse a no-fix position (`oxbot-r1/README.md`).
 
 Worth enabling:
 

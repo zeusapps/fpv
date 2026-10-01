@@ -1,12 +1,13 @@
 # Meteor75 Pro 1S (BETAFPVG473, Betaflight 4.5.1) - ELRS / HelloRadio V12 MAX
 #
-# Base:  the aircraft as captured 2026-09-29 (dumps/..._20260929_... - current.txt)
+# Base:  the aircraft as captured 2026-09-29 (dumps/..._20260929_... - V1 applied.txt)
 #        with BetaFPV's factory GF 40mm PID profile restored from the 2026-01-30 dump.
 # Adds:  Cine / Park / Base rate profiles on CH9, LiHV battery ceiling, factory
 #        low-voltage thresholds. See openspec/changes/align-meteor75-with-aircraft.
 #
 # Receiver: ELRS (CRSF) on UART3. For the DJI RC over the air unit's SBUS, paste
-# M75_PRO_SBUS_V1.txt instead - the two files differ only in the receiver block.
+# M75_PRO_SBUS_V1.txt instead - the two files differ only in the receiver setup:
+# the serial block, serialrx_provider, and feature TELEMETRY (ELRS only).
 #
 # AFTER PASTING: re-run Calibrate Accelerometer. Do not fly without it.
 # Then take a fresh diff all and compare it with this file (README, "Applying a config").
@@ -27,6 +28,13 @@ manufacturer_id BEFH
 
 # feature
 feature OSD
+# TELEMETRY is what sends RxBt, Curr, Capa and FM to the radio. It is NOT a default:
+# at 4.5.1 BETAFPVG473 defines no DEFAULT_FEATURES, so it falls back to 0
+# (config/feature.h:25-27), and the telemetry task only runs with this feature set
+# (fc/tasks.c:312, :557). It was off on every capture of this aircraft until
+# 2026-09-30. Without it the radio still shows ELRS link stats, which hides the gap.
+# ELRS only - the SBUS link has no telemetry path, so M75_PRO_SBUS_V1.txt omits it.
+feature TELEMETRY
 
 # serial
 # UART1 (0) off  (default; written so the ELRS and SBUS files differ visibly)
