@@ -1,22 +1,28 @@
 # Failsafe — Pavo20 Pro II
 
-Configured procedure: **GPS Rescue**, in two blocks that must be pasted at different times.
+Configured procedure: **GPS Rescue — live.** `get failsafe_procedure` returned `GPS-RESCUE` on
+2026-10-02. **It is an accepted risk, not a qualified configuration**: the pilot armed it after one
+switch-triggered return on 2026-10-01, which oscillated in altitude and was taken over before it
+landed, and kept it after being told what is unproven. Nobody has seen this rescue land, and no
+attempt has been logged. If a logged rescue disarms in the air, flies away or does not descend,
+revert — see *If you decide against it* at the end.
 
 | File | What it does | When |
 |---|---|---|
 | `PAVO20PRO2_GPS_RESCUE_TUNING.txt` | The rescue parameters. Changes nothing about failsafe. | **Now.** Paste it before testing. |
-| `PAVO20PRO2_FAILSAFE_GPS_RESCUE.txt` | One line: `failsafe_procedure = GPS-RESCUE`. | **Only after the switch test passes.** |
+| `PAVO20PRO2_FAILSAFE_GPS_RESCUE.txt` | One line: `failsafe_procedure = GPS-RESCUE`. | Written as "only after the switch test passes". **Applied before it had** — see the file header for which gates were unmet. |
 
 The split exists because the two halves carry completely different risk. The tuning block only
 changes what a rescue you deliberately trigger does, and it makes it gentler than the firmware
 defaults — there is no reason to delay it and a good reason not to, below. The one-line block
 changes what happens when the link dies, and that is the part that must be earned.
 
-**Until block 2 is pasted the aircraft drops on signal loss** — `failsafe_procedure` sits at the
-2025.12.2 default of `DROP_IT` (`src/main/flight/failsafe.c:78`) and is absent from the capture.
-That is the safe status quo.
+**On signal loss the aircraft now tries to fly home.** It climbs to the highest altitude of this
+power-up plus 10 m, returns, and descends toward where the pack was first armed. Before block 2 it
+sat at the 2025.12.2 default of `DROP_IT` (`src/main/flight/failsafe.c:78`) and fell.
 
-**The failsafe stays on DROP until a rescue has actually been flown home, more than once.**
+*Superseded 2026-10-02, kept because the reasoning still holds:* **"The failsafe stays on DROP until
+a rescue has actually been flown home, more than once."**
 Configuring the rescue is not qualifying it. `DROP` fails by cutting motors, so the aircraft falls
 where it already was; GPS Rescue fails by flying under power in a direction nobody chose. A rescue
 that has not been flown is not the safer option, it is the untested one — and the first attempt on
@@ -146,11 +152,13 @@ short-range branches and never see a real rescue.
 1. Assign **GPS Rescue** to AUX 6 as above and confirm it on the Receiver tab.
 2. **Paste `PAVO20PRO2_GPS_RESCUE_TUNING.txt`** and `save`. Do not test on firmware defaults —
    see the note at the top of this file. Leave block 2 alone.
-3. **Measure the hover throttle and correct `ap_hover_throttle`.** The committed `1340` is derived
-   from `thr_hover = 34`, not measured. Hover the aircraft steadily, read the **throttle percentage
+3. **Measure the hover throttle and correct `ap_hover_throttle`.** The committed `1420` is the
+   pilot's OSD reading of about 42% on 2026-10-01, on a **4S 850 mAh** pack. It replaced `1340`,
+   which was derived from `thr_hover = 34` and under which the 2026-10-01 rescue hopped in altitude.
+   The figure is only right for the pack it was read on, so re-read it on the pack you test with. Hover the aircraft steadily, read the **throttle percentage
    from the OSD** (`osd_throttle_pos` is configured on this aircraft), and convert:
    `value = percent x 10 + 1000` — 34% is `1340`, 38% is `1380`. Set it and confirm with
-   `get ap_hover_throttle`. **If the measurement disagrees with 1340, the measurement wins.** This
+   `get ap_hover_throttle`. **If the measurement disagrees with 1420, the measurement wins.** This
    is the setting most likely to have caused the 2026-09-03 drop; see *Settings reference* below.
 4. **Arm the logging.** In the CLI: `set debug_mode = RTH`, `save`. There is **no
    `feature BLACKBOX`** at 2025.12.2 — the CLI rejects the name outright
@@ -191,6 +199,12 @@ If it wanders, oscillates, fails to climb, or heads the wrong way — turn the s
 set `failsafe_procedure = DROP` until it is understood. Do not fly with a rescue that behaved
 oddly on the bench-test.
 
+**Exception, recorded 2026-10-02:** the 2026-10-01 rescue oscillated, and the pilot kept
+`GPS-RESCUE` anyway, judging a rescue that limps home better than a certain drop. The oscillation is
+attributed, unconfirmed, to `ap_hover_throttle` sitting 80 below hover; it is now `1420`. The next
+switch test must be logged and allowed to land unaided. If it still oscillates, this paragraph's
+rule applies without exception.
+
 ## Verifying failsafe itself
 
 Separately from the rescue behaviour, confirm failsafe actually triggers. **Props off**, quad on
@@ -220,7 +234,7 @@ that matters.
 | `gps_rescue_descend_rate` | `100` cm/s | 1 m/s |
 | `gps_rescue_ground_speed` | `500` cm/s | 5 m/s — controllable, not ambitious |
 | `gps_rescue_descent_dist` | `15` m | Start descending 15 m out |
-| `ap_hover_throttle` | `1340` | **Derived, not measured.** The throttle commanded at rescue onset; the `1275` default is below this airframe's hover and makes a rescue sink. Measure and correct — step 3 above |
+| `ap_hover_throttle` | `1420` | Measured 2026-10-01 off the OSD, ~42% on a 4S 850 mAh pack; was `1340`, derived from `thr_hover`. The throttle commanded at rescue onset; the `1275` default is below this airframe's hover and makes a rescue sink. Re-read on the test pack — step 3 above |
 | `debug_mode` | `RTH` | So an attempt produces evidence. Was `GYRO_FILTERED` |
 
 Both lookups were read off the aircraft on 2026-09-03 and both already held the right value;
@@ -274,9 +288,9 @@ is safe, and a switch-induced rescue **can** disarm the aircraft.
 
 ## If you decide against it
 
-`DROP` is the honest default for a cinewhoop flown close in, and there is no shame in it. **It is
-also where the aircraft already sits**, so deciding against GPS Rescue means doing nothing — simply
-never paste block 2. If you have already pasted it and want to go back:
+`DROP` is the honest default for a cinewhoop flown close in, and there is no shame in it. Block 2
+**is** pasted (read back 2026-10-02), so deciding against GPS Rescue now means reverting it.
+Confirm with `get failsafe_procedure` that it returns `DROP` afterwards:
 
 ```
 set failsafe_procedure = DROP

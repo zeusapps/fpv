@@ -10,8 +10,13 @@ Getting to that test exposed three further problems worth fixing permanently: th
 was never reaching the aircraft at all, the config bundled a dangerous line with harmless ones,
 and the one line that arms the failsafe was written in a form the CLI silently rejects.
 
-This change leaves the aircraft **configured and instrumented, with the failsafe still on `DROP`**.
-The flight test that would justify arming it is explicitly out of scope and stays with the pilot.
+This change leaves the aircraft **configured and instrumented, with the failsafe on `GPS-RESCUE`
+by the pilot's decision of 2026-10-02**. That decision rests on one switch-triggered return on
+2026-10-01, oscillating in altitude and taken over before landing. It is recorded as an accepted
+risk, not a qualification. The flight test that would qualify it stays with the pilot.
+
+*Superseded 2026-10-02:* this paragraph said the change leaves the failsafe "still on `DROP`". The
+pilot armed block 2 after the 2026-10-01 return.
 
 ## What Changes
 
@@ -67,5 +72,6 @@ aircraft, and none may until the pilot has flown it.
 - `radio/WIDGETS/GPSQR/main.lua`, `radio/CODE_REVIEW.md` — satellite gating
 - `HANDOFF.md` — current state and what the field attempt did and did not prove
 
-No aircraft behaviour changes on lost link: `failsafe_procedure` stays at the `DROP_IT` default
-throughout this change.
+**Lost-link behaviour changed.** `failsafe_procedure` went from the `DROP_IT` default to
+`GPS-RESCUE` (read back 2026-10-02): on signal loss the aircraft now attempts to fly home instead of
+cutting motors. This section previously said no lost-link behaviour would change.

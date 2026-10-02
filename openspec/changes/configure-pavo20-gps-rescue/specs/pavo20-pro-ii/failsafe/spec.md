@@ -6,31 +6,49 @@ depends on for a 2.2" ducted cinewhoop with very little thrust margin.
 
 ## ADDED Requirements
 
-### Requirement: The failsafe procedure SHALL remain DROP until a rescue has been flown successfully
+### Requirement: GPS Rescue SHALL be the failsafe procedure only as a recorded pilot acceptance, with DROP as the revert
 
-`failsafe_procedure` MUST stay at `DROP` until GPS Rescue has returned the aircraft and descended
-near the pilot, on this airframe, on more than one attempt. Configuration alone SHALL NOT be
-treated as qualification.
+`failsafe_procedure` is `GPS-RESCUE`. The pilot set it, and it was read back on the aircraft on
+2026-10-02. It MUST be recorded as an **accepted risk**, not as a qualified configuration, and the
+record MUST state what the acceptance rests on and what remains unproven. Every later switch test
+MUST be logged and MUST let the rescue descend and land unaided unless it misbehaves. A logged
+rescue that fails MUST return the aircraft to `DROP`.
 
-At Betaflight `2025.12.2` this is also the firmware default —
-`.failsafe_procedure = FAILSAFE_PROCEDURE_DROP_IT` (`src/main/flight/failsafe.c:78`) — so the
-requirement is satisfied by the setting being **absent** from a `diff`, not by a line asserting it.
+**What it rests on.** On 2026-10-01, switch-triggered on the Oxbot R1 with `ap_hover_throttle =
+1340`, the rescue climbed to about 30 m and came home from range, oscillating in altitude. The
+pilot judged that a rescue which limps home is preferable to a certain `DROP` wherever the link is
+lost.
 
-The asymmetry is the whole reason: `DROP` fails by cutting motors, so the aircraft falls where it
-already was. GPS Rescue fails by flying under power in a direction nobody chose. A rescue that has
-not been flown is not a safer option than dropping, it is an untested one, and on 2026-09-03 the
-first attempt on this aircraft ended with the motors stopped and the quad on the ground.
+**What is unproven.** The descent and landing: the pilot took over as it began descending over a
+tree, so neither the landing phase nor the disarm on touchdown has ever run on this aircraft.
+Behaviour on hard Rx loss, where `RESCUE_SANITY_FS_ONLY` no longer forgives a sanity failure and a
+failed check disarms in the air. The hover reference: the committed `1420` has not flown a rescue.
+And no attempt has been logged.
 
-#### Scenario: Aircraft has not yet flown a successful rescue
+*Superseded 2026-10-02, kept because its argument still holds:* this requirement read "The failsafe
+procedure SHALL remain DROP until a rescue has been flown successfully", demanding a return and
+descent near the pilot on more than one attempt. At `2025.12.2` `DROP` is the firmware default
+(`src/main/flight/failsafe.c:78`). The asymmetry it rested on is unchanged: `DROP` fails by cutting
+motors, so the aircraft falls where it already was; GPS Rescue fails by flying under power in a
+direction nobody chose. That is the risk the pilot has accepted.
+
+#### Scenario: Reading the failsafe procedure off the aircraft
 
 - **WHEN** `get failsafe_procedure` is run on the aircraft
-- **THEN** it returns `DROP`, and no committed config contains a line setting it to anything else
-  outside the separately gated arming file
+- **THEN** it returns `GPS-RESCUE`, and any other value means the repo no longer describes the
+  aircraft and must be corrected
 
-#### Scenario: Radio switched off in flight before qualification
+#### Scenario: Radio switched off in flight
 
 - **WHEN** the pilot switches the transmitter off with the aircraft armed and airborne
-- **THEN** the motors stop and the aircraft falls, rather than attempting to fly home
+- **THEN** the aircraft attempts to fly home rather than dropping, first climbing to the highest
+  altitude of this power-up plus `gps_rescue_initial_climb`
+
+#### Scenario: A logged rescue fails
+
+- **WHEN** a logged rescue disarms in the air, flies away from home, or does not descend
+- **THEN** `set failsafe_procedure = DROP` and `save` are applied and `get failsafe_procedure`
+  returns `DROP` before the aircraft flies again
 
 ### Requirement: The rescue configuration SHALL be split so the arming line cannot be applied early
 
@@ -50,8 +68,9 @@ Bundling them forces a choice between testing on untuned values and arming an un
 #### Scenario: Tuning applied before any rescue has been flown
 
 - **WHEN** the tuning file is pasted and saved
-- **THEN** `get gps_rescue_ascend_rate` returns the tuned value and `get failsafe_procedure` still
-  returns `DROP`
+- **THEN** `get gps_rescue_ascend_rate` returns the tuned value and `get failsafe_procedure`
+  returns whatever it returned before the paste, because the tuning file touches no failsafe
+  setting
 
 #### Scenario: Arming file is applied
 
@@ -77,6 +96,10 @@ The default is `1275` (`src/main/pg/autopilot_multirotor.c:36`), i.e. 27.5%. Thi
 throttle curve places its hover point at 34% (`thr_hover = 34`, the y-coordinate of the hover
 point per `src/main/fc/rc.c:826-838`), around `1340`. A rescue therefore begins roughly 6.5% below
 hover.
+
+`1340` was itself superseded by a measurement. On 2026-10-01 the pilot read hover at about 42% off
+the OSD on a 4S 850 mAh pack, during a rescue that oscillated in altitude with `1340` set, so the
+committed value is `1420`. A hover figure holds only for the pack it was read on.
 
 That is not merely a sag. Falling short of the commanded climb is itself a failure condition, and
 one that **ignores `gps_rescue_sanity_checks` entirely**: in `RESCUE_ATTAIN_ALT`, if achieved

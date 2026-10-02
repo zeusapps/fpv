@@ -99,10 +99,13 @@ set gps_rescue_descent_dist = 15
 # counter ticks once per second and at 10 s forces RESCUE_LANDING, which enables
 # impact detection and disarms after another 10 s (gps_rescue_multirotor.c:434-460).
 #
-# 1340 is DERIVED from thr_hover, not measured. Before flying a rescue, hover the
-# aircraft, read the throttle percentage off the OSD, and correct this to match:
-# percent * 10 + 1000. If the measurement disagrees, the measurement wins.
-set ap_hover_throttle = 1340
+# 1340 was DERIVED from thr_hover and has been superseded by a measurement: on
+# 2026-10-01 the pilot read hover at about 42% off the OSD, on a 4S 850 mAh pack,
+# during the flight whose rescue came home "bunny hopping" with 1340 set. Hence
+# 1420 = 42 * 10 + 1000. The figure belongs to that pack - 3S, 4S 680 and 4S 850
+# each hover differently. Re-read it on the pack you test with; if the measurement
+# disagrees, the measurement wins.
+set ap_hover_throttle = 1420
 
 # ---- Sanity checks ------------------------------------------------------------
 # FS_ONLY, not ON. This is deliberate and is NOT the weaker setting for the case

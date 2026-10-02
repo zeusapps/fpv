@@ -13,6 +13,7 @@ These files are already edited but uncommitted. Verify rather than redo.
   that each scenario in the `radio/gpsqr-widget` delta has a corresponding branch in `main.lua`.
 - [x] 1.4 Confirm `HANDOFF.md` states the true current state — block 1 pasted, block 2 not, `aux 6`
   applied, failsafe on `DROP` — with no leftover claims that any of those is outstanding.
+  *Superseded 2026-10-02: true when done; block 2 has since been applied — see 5.5–5.7.*
 
 ## 2. Correct the hover throttle reference
 
@@ -20,8 +21,12 @@ These files are already edited but uncommitted. Verify rather than redo.
   citing `autopilot_multirotor.c:195-205` for why it is the throttle at rescue onset, and
   `thr_hover = 34` for where 1340 comes from. Verify the file still has no `batch start` and ends
   in `save`.
-- [ ] 2.2 Paste the line onto the aircraft and verify with `get ap_hover_throttle` returning `1340`
+- [x] 2.2 Paste the line onto the aircraft and verify with `get ap_hover_throttle` returning `1420`
   — not by the paste appearing to succeed, per the `flight-config` read-back requirement.
+  *Revised 2026-10-02: the target was `1340`. The 2026-10-01 rescue came home oscillating in
+  altitude with `1340` set, and the pilot read hover at ~42% on a 4S 850 mAh pack, so the committed
+  value is now `1420` — a measurement, which the `failsafe` delta says overrides the derivation.*
+  *Done 2026-10-02: `get ap_hover_throttle` returned `1420`.*
 - [x] 2.3 Record in `FAILSAFE.md` that the value is derived, not measured, and that a steady hover
   must be flown with the OSD throttle percentage read and the setting corrected to match before any
   rescue attempt. Verify the procedure names the OSD element and the 1000–2000 conversion.
@@ -40,8 +45,9 @@ prints — and blackbox was already enabled via `blackbox_device = SPIFLASH`. Wh
   `SPIFLASH` and `feature` lists no `BLACKBOX` in Enabled, Available or Unavailable — both already
   observed 2026-09-20. Settle it by running `feature BLACKBOX` and confirming the CLI rejects the
   name. Record the flash size `flash_info` actually reports in `HARDWARE.md`.
-- [ ] 3.2 Set `debug_mode = RTH` and verify with `get debug_mode`. Note the previous value
+- [x] 3.2 Set `debug_mode = RTH` and verify with `get debug_mode`. Note the previous value
   (`GYRO_FILTERED`) in `FAILSAFE.md` so it can be restored after testing.
+  *Done 2026-10-02: `get debug_mode` returned `RTH`; `GYRO_FILTERED` is noted in `FAILSAFE.md` step 4.*
 - [ ] 3.3 Free the flash, then size a full flight against the 16 MB it actually holds.
   **Download the existing contents before erasing** — the flash is full, so it holds logs from
   earlier flights, and the newest may cover 2026-09-03. Then erase, arm on the bench props off for
@@ -76,8 +82,18 @@ prints — and blackbox was already enabled via `blackbox_device = SPIFLASH`. Wh
   `get failsafe_procedure` after pasting.
 - [x] 5.2 Confirm the aircraft is left on `DROP`: `get failsafe_procedure` returns `DROP` and
   `feature`/`diff` show no `failsafe_procedure` line. This is the final state of this change.
+  *Superseded 2026-10-02: the pilot applied block 2 and chose to keep it. The final state is
+  `GPS-RESCUE` — see 5.5.*
 - [x] 5.3 Record in `HANDOFF.md` what the 2026-09-03 attempt did and did not prove — switch
   reaches the state machine, home was set, GPS had a fix; nothing about whether the rescue can fly
   the aircraft — and that the next attempt is the pilot's, outside this change.
 - [x] 5.4 Commit the change with the working-tree edits, and verify `openspec validate
   configure-pavo20-gps-rescue --strict` still passes.
+- [x] 5.5 Read the failsafe procedure back off the aircraft. `get failsafe_procedure` returned
+  `GPS-RESCUE` on 2026-10-02; the pilot chose to keep it after being told what is unproven.
+- [x] 5.6 Before the next flight, apply `ap_hover_throttle = 1420` and read it back — this is 2.2.
+  With the failsafe live, a real signal loss runs the rescue on whatever value is on the board.
+- [x] 5.7 Rewrite `HANDOFF.md`, `FAILSAFE.md` and the header of `PAVO20PRO2_FAILSAFE_GPS_RESCUE.txt`
+  to state that `GPS-RESCUE` is live, as an accepted risk, with the `DROP` revert. Keep the gate
+  checklist, marked with which items were unmet when it was armed. Verify `grep -n DROP` across
+  them finds no claim that the aircraft is currently on `DROP`.

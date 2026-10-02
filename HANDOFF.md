@@ -16,7 +16,7 @@ number — `HANDOFF.md` under *GPS Rescue*, not "item 2".
 
 | Aircraft | Status |
 |---|---|
-| **Pavo20 Pro II** | Flying. Rewired 2026-09-01; moved to the UBLOX GPS provider 2026-09-03. Active work is here. |
+| **Pavo20 Pro II** | Flying. Rewired 2026-09-01; moved to the UBLOX GPS provider 2026-09-03. Failsafe is GPS Rescue since 2026-10-02 — an accepted risk, never seen to land. Active work is here. |
 | **Meteor75 Pro** | Configs rewritten 2026-09-29 after the aircraft was found to match no committed file. Flown 2026-09-30, six packs, pilot reports it much better. SBUS variant untested; accelerometer suspect. |
 | **FireFly25** | Bare defaults capture only. Not actively worked on. |
 | **Radio (V12 MAX)** | GPSQR widget bench-verified 2026-09-03. Field checks outstanding; two known defects, one accepted, one open. |
@@ -88,9 +88,10 @@ This distinction matters more than usual — these configs fly real hardware.
 - **GPS fix quality in flight.** The 2026-09-03 fix was stationary, on a balcony, under partial
   sky. Whether it holds a fix while moving, in open field, with motors running and the O4
   transmitting, is unconfirmed. Do not read the balcony result as clearing GPS Rescue.
-- **GPS Rescue.** Block 1 (tuning) is pasted; block 2 (the arming line) is not, so the aircraft
-  is still on `DROP`. One field attempt exists, on 2026-09-03, and it produced no log — nothing is
-  known about whether a rescue can fly this aircraft. See below.
+- **GPS Rescue — live as the failsafe, unqualified.** Both blocks are pasted;
+  `get failsafe_procedure` returned `GPS-RESCUE` on 2026-10-02. One switch-triggered rescue has come
+  home (2026-10-01), oscillating, and was taken over before landing. No rescue has been seen to
+  land and none has been logged. See below.
 - **The SBUS config.** `PAVO20PRO2_SBUS_V1.txt` has never been pasted or flown. It was edited on
   2026-09-03 alongside the ELRS config because it carried the same stale calibration; that changed
   nothing about its status.
@@ -104,7 +105,19 @@ This distinction matters more than usual — these configs fly real hardware.
 
 ## Outstanding work
 
-### 1. GPS Rescue — came home once, oscillating, do not trust yet
+### 1. GPS Rescue — live as the failsafe, came home once, oscillating
+
+**State as of 2026-10-02: `failsafe_procedure = GPS-RESCUE`, an accepted risk.** The pilot pasted
+block 2 after the 2026-10-01 return and, on 2026-10-02, chose to keep it after being told what is
+unproven: the descent and landing (never run — taken over above a tree), the touchdown disarm, a
+real Rx loss (where `FS_ONLY` no longer forgives a sanity failure, so a failed check disarms in the
+air), the `1420` hover value, and any log at all. The pilot's basis: a rescue that limps home beats
+a certain `DROP`. Recorded in the `pavo20-pro-ii/failsafe` spec. **Revert to `DROP`** if a logged
+rescue disarms in the air, flies away, or does not descend.
+
+Applied and read back the same day: `ap_hover_throttle = 1420`, `debug_mode = RTH`.
+
+*Everything below up to "Second field trigger" describes the DROP-era plan and is kept as history.*
 
 The config is now **two files**, split 2026-09-03 because the halves carry different risk:
 
@@ -115,12 +128,13 @@ The config is now **two files**, split 2026-09-03 because the halves carry diffe
 - `pavo20-pro-ii/PAVO20PRO2_FAILSAFE_GPS_RESCUE.txt` — one line, `failsafe_procedure = GPS-RESCUE`.
   **Not to be pasted until the switch test in `FAILSAFE.md` has passed.**
 
-**Block 1 is pasted and verified (2026-09-03); block 2 is not.** A `diff` returned the five
+**Block 1 is pasted and verified (2026-09-03); block 2 was not at that point** (it is now — see
+the top of this section). A `diff` returned the five
 `gps_rescue_*` lines that differ from default — `ascend_rate`, `descend_rate`, `ground_speed`,
 `descent_dist`, `return_alt` — and correctly omitted the six that equal it. `failsafe_procedure` is
-absent, so it remains at the 2025.12.2 default of `DROP_IT` (`src/main/flight/failsafe.c:78`): the
-aircraft cuts motors and falls on signal loss. That is the intended state until the rescue is
-proven.
+absent, so it remained at the 2025.12.2 default of `DROP_IT` (`src/main/flight/failsafe.c:78`): the
+aircraft cut motors and fell on signal loss. That was the intended state until the rescue was
+proven; superseded 2026-10-02.
 
 The user chose GPS Rescue over DROP after being told the trade-offs. It is the only failsafe that
 keeps motors running under power, so its failure mode is a flyaway rather than a broken quad.
@@ -230,12 +244,13 @@ is too heavy for it.
   difference. Alternatives not excluded: baro noise from prop wash in the ducts, and altitude gains
   too aggressive for this airframe. `debug_mode = AUTOPILOT_ALTITUDE` logs the four terms
   separately (`:214-217`) and would separate them.
-- **Next, cheapest first:** `set ap_hover_throttle = 1420` after confirming the hover figure on the
-  pack you will test with — the baseline is only right for the pack it was measured on, and 3S,
-  4S 680 and 4S 850 will each differ — then repeat the switch test.
-  `FAILSAFE.md` step 3 already says the measurement wins over the committed `1340`; the committed
-  file and the `configure-pavo20-gps-rescue` task that pins `1340` need updating when it is applied.
-  Failsafe stays on `DROP` until a rescue returns without oscillation.
+- **Done 2026-10-02:** `ap_hover_throttle = 1420` applied and read back, and committed in
+  `PAVO20PRO2_GPS_RESCUE_TUNING.txt`. It is right for the 4S 850 mAh pack it was read on; 3S and
+  4S 680 will differ, so re-read hover on any other pack.
+- **Next:** repeat the switch test with the flash erased and `RTH` logging, and let it land by
+  itself unless it misbehaves. Since the failsafe is now live, that test is also the only evidence
+  for what a real signal loss will do. *Superseded:* this bullet said the failsafe stays on `DROP`
+  until a rescue returns without oscillation.
 
 Two source findings came out of setting those, both of which corrected this repo:
 

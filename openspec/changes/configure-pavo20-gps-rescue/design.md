@@ -2,8 +2,9 @@
 
 See `proposal.md` — Why. The state that shapes the approach:
 
-- The aircraft is on `failsafe_procedure = DROP_IT` (the firmware default, absent from the capture)
-  and stays there through this change.
+- The aircraft is on `failsafe_procedure = GPS-RESCUE`, set by the pilot and read back
+  2026-10-02. Until then it was on `DROP_IT` (the firmware default, absent from the capture), and
+  this change originally planned to leave it there.
 - `aux 6 46 5 1700 2100 0 0` is applied; AUX 6 moves on the Receiver tab.
 - The tuning block is pasted and verified. Five non-default `gps_rescue_*` lines appear in a
   `diff`; the six that equal the `2025.12.2` default correctly do not.
@@ -52,6 +53,9 @@ higher.
 So: set `1340` now, and require the OSD hover reading to confirm or correct it before the rescue
 is flown. If the measurement disagrees, the measurement wins.
 
+*Addendum 2026-10-02:* it did. The pilot read ~42% on a 4S 850 mAh pack on 2026-10-01, during a
+rescue that oscillated with `1340` set. The committed value is now `1420`.
+
 ### Choose `debug_mode = RTH` over `AUTOPILOT_ALTITUDE`
 
 Only one debug mode can be active, so this is a real choice.
@@ -72,6 +76,11 @@ something the altitude terms would not have told us.
 `debug_mode` is currently `GYRO_FILTERED`, which is filter-tuning instrumentation and not in use.
 
 ### Keep the two-block split, and keep block 2 unpasted
+
+*Superseded 2026-10-02 for the second half.* The pilot pasted block 2 after the 2026-10-01 rescue
+came home, and chose to keep it after being told what was unproven. The split itself stands: it is
+still what lets the parameters change without touching lost-link behaviour, and block 2's
+checklist is now the record of which gates were unmet when it was armed.
 
 The alternative — one file with a loud comment above the arming line — was rejected. A comment does
 not survive the operation the repo actually performs, which is selecting part of a file and pasting
@@ -108,9 +117,13 @@ which failures are recoverable. The documentation must not offer it as a safety 
   reproduces the sink, too high shows as an unwanted climb at rescue onset, and both are visible in
   the first seconds with the switch in hand. The spec requires the measured hover to override it.
 - **The aircraft genuinely cannot climb at 2 m/s carrying an O4 Pro** → Then the correct outcome is
-  not a tuning change but a decision to stay on `DROP`. The proposal's acceptance does not require
-  arming, and `FAILSAFE.md` already documents `DROP` as the honest default for this class of
-  aircraft.
+  not a tuning change but a revert to `DROP`. `FAILSAFE.md` already documents `DROP` as the honest
+  default for this class of aircraft.
+- **A real failsafe now runs a rescue that has never been seen to land** (added 2026-10-02) → The
+  descent, landing and touchdown disarm have not run on this aircraft, and on hard Rx loss
+  `FS_ONLY` disarms on any sanity failure. Mitigated only by the next logged switch test being
+  allowed to land unaided, and by the revert below. The GPSQR widget is the recovery aid if it
+  comes down elsewhere.
 - **Attention has been on the rescue while the real gate is elsewhere** → GPS has still never been
   shown to hold a fix while *moving*, with motors running and the O4 transmitting. The 26-satellite
   reading was good but stationary readings have flattered this aircraft before. Tasks keep this
@@ -118,12 +131,12 @@ which failures are recoverable. The documentation must not offer it as a safety 
 
 ## Migration Plan
 
-Rollback is the absence of an action: the aircraft is on `DROP` and stays there. Nothing in this
-change alters lost-link behaviour, so there is no state to revert.
+Rollback is `set failsafe_procedure = DROP` and `save`, then `get failsafe_procedure` to confirm
+it returns `DROP` — the same read-back the flight-config spec requires, for the same reason. Apply
+it if a logged rescue disarms in the air, flies away, or does not descend.
 
-If block 2 is later applied and the rescue misbehaves, recovery is `set failsafe_procedure = DROP`
-and `save`, then `get failsafe_procedure` to confirm — the same read-back the flight-config spec
-now requires, for the same reason.
+*Superseded 2026-10-02:* this section said rollback was "the absence of an action" because the
+aircraft would stay on `DROP`. Block 2 is applied, so it no longer is.
 
 ## Open Questions
 

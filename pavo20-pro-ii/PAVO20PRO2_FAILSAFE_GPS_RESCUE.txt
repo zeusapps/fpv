@@ -4,14 +4,34 @@
 # the only part of GPS Rescue that is dangerous to enable early.
 #
 # ---------------------------------------------------------------------------
-# DO NOT PASTE THIS UNTIL GPS RESCUE HAS PASSED THE SWITCH TESTING IN FAILSAFE.md
+# APPLIED. "get failsafe_procedure" returned GPS-RESCUE on 2026-10-02. The pilot
+# pasted it after the 2026-10-01 switch-triggered rescue came home, and chose to
+# keep it after being told what is unproven. It is an ACCEPTED RISK, not a
+# qualified configuration: gates 6 and 7 below were unmet when it was armed.
 # ---------------------------------------------------------------------------
 #
-# Until this is pasted, failsafe_procedure sits at the 2025.12.2 firmware default
-# of DROP_IT (flight/failsafe.c:78) - on loss of signal the aircraft cuts motors
-# and falls. That is the safe status quo. The failure mode of DROP is a broken
-# quad; the failure mode of a bad rescue is a flyaway under power, possibly
-# toward people. There is no hurry to change it.
+# Before this was pasted, failsafe_procedure sat at the 2025.12.2 firmware
+# default of DROP_IT (flight/failsafe.c:78) - on loss of signal the aircraft cuts
+# motors and falls. The failure mode of DROP is a broken quad; the failure mode
+# of a bad rescue is a flyaway under power, possibly toward people.
+#
+# Revert to DROP (bottom of this file) if a logged rescue disarms in the air,
+# flies away from home, or does not descend.
+#
+# The gates this file was written to enforce, and their state when it was armed
+# (as of 2026-10-02):
+#
+#   1. MET 2026-09-03.  2. MET 2026-09-03.
+#   3. MET for the 4S 850 mAh pack only; 1420 applied and read back 2026-10-02,
+#      AFTER arming. Re-read hover on any other pack.
+#   4. MET ONCE: the 2026-10-01 rescue navigated home, which needs a fix in
+#      flight. Not repeated.
+#   5. MET: the 2026-09-03 attempt proved home was set.
+#   6. UNMET. One return, 2026-10-01, oscillating in altitude; the pilot took
+#      over as it descended over a tree, so it never landed by itself.
+#   7. UNMET. No attempt has been logged.
+#
+# The original gate text follows, unchanged.
 #
 # Prerequisites, all of them, in order:
 #
@@ -20,12 +40,14 @@
 #      demand this airframe cannot meet.
 #   2. aux 6 46 5 1700 2100 0 0 is applied and AUX 6 is confirmed moving on the
 #      Receiver tab.
-#   3. ap_hover_throttle has been MEASURED, not derived. The committed 1340 comes
-#      from thr_hover = 34, not from this aircraft. Hover it, read the OSD
+#   3. ap_hover_throttle has been MEASURED on the pack you fly. The committed
+#      1420 is ~42% read on a 4S 850 mAh pack, 2026-10-01; another pack will
+#      hover differently. Hover it, read the OSD
 #      throttle percentage, set percent*10+1000, confirm with
 #      "get ap_hover_throttle". Too low and the rescue sinks, cannot meet the
 #      climb demand, and is brought down by the rescue's own timeout - the most
-#      likely cause of the 2026-09-03 drop.
+#      likely cause of the 2026-09-03 drop. 80 below hover (1340 against 1420)
+#      is the leading suspect for the 2026-10-01 rescue oscillating in altitude.
 #   4. GPS holds a fix IN FLIGHT - moving, motors running, O4 transmitting. As of
 #      2026-09-03 this has never been verified; the only fix on record is
 #      stationary, on a balcony, under partial sky.
@@ -42,7 +64,8 @@
 #      attempt nobody logged cannot accept this configuration and cannot
 #      condemn it.
 #
-# If any of those is unmet, close this file.
+# If any of those is unmet, close this file.  (Overridden by the pilot,
+# 2026-10-02 - see the top of this file.)
 #
 # NOTE THE HYPHEN. The CLI lookup table is { "AUTO-LAND", "DROP", "GPS-RESCUE" }
 # (cli/settings.c:382-384) and matching is strcasecmp - case-insensitive but
