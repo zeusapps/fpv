@@ -114,3 +114,37 @@ the Cube G4 board".
 Match the existing documentation: direct, specific, evidence-first. When something was measured or
 tested, say when and what the result was. When a hypothesis was disproven, keep it and say so —
 the record of what was ruled out is often more useful than the conclusion.
+
+### Simplified Technical English (ASD-STE100)
+
+Write all new prose in ASD-STE100 Simplified Technical English (STE). This includes replies to the
+user, guides, `HANDOFF.md`, specs, OpenSpec changes and commit messages. The documents in this repo
+are procedures on hardware with spinning propellers. STE was made for this type of document.
+
+Use these rules:
+
+- Write procedural sentences with a maximum of 20 words. Write descriptive sentences with a
+  maximum of 25 words.
+- Give one instruction in each sentence. Use the imperative in procedures: "Remove the
+  propellers.", not "The propellers should be removed."
+- Use the active voice.
+- Use only the simple tenses: present, simple past and simple future. Do not use "-ing" forms as
+  verbs.
+- Write a maximum of 6 sentences in a paragraph. Each paragraph has one topic.
+- Start a warning or a caution with the command. Then give the risk: "Remove the propellers
+  before you connect the battery. The motors can start without a command."
+- Keep the articles "the" and "a". Do not use more than 3 nouns in a row.
+- Use each word with one meaning only, as the STE dictionary gives it. For example, write "make
+  sure", not "ensure", and "examine", not "check".
+
+Technical names are permitted. These include hardware names (UART, ESC, VTX), Betaflight setting
+names (`gps_provider`) and Betaflight mode names.
+
+Do not apply STE to these items. They must stay exact:
+
+- Betaflight CLI lines and the contents of `.txt` config files.
+- Lua code and other code.
+- Quoted source code, quoted error text and quoted words from the user.
+
+Do not rewrite an existing document in STE unless the user tells you to. When you edit an existing
+document, write the new text in STE.
