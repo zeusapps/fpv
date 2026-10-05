@@ -50,7 +50,8 @@ prints — and blackbox was already enabled via `blackbox_device = SPIFLASH`. Wh
   *Done 2026-10-02: `get debug_mode` returned `RTH`; `GYRO_FILTERED` is noted in `FAILSAFE.md` step 4.*
 - [ ] 3.3 Free the flash, then size a full flight against the 16 MB it actually holds.
   **Download the existing contents before erasing** — the flash is full, so it holds logs from
-  earlier flights, and the newest may cover 2026-09-03. Then erase, arm on the bench props off for
+  earlier flights, and the newest may cover 2026-09-03. *Not done: erased unread 2026-10-02
+  (`usedSize` 16777216 → 0). The old logs are lost.* Then erase, arm on the bench props off for
   a timed 60 s, read `flash_info`, and confirm the used bytes extrapolate to a complete flight at
   `blackbox_sample_rate = 1/4` (allowed: 1/1, 1/2, 1/4, 1/8, 1/16; `pid_process_denom = 2` puts
   logging near 1 kHz). Lower the rate only if the measurement says it does not fit.

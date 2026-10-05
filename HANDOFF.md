@@ -192,7 +192,7 @@ with `min_sats = 8` would otherwise have blocked arming (`fc/core.c:400-407`). P
 **What it did not prove, and cannot:** anything about whether the rescue can fly this aircraft.
 Nothing was logged, so the phase, the failure code, and whether the motors stopped in the air or on
 impact are all unrecoverable from recollection, and each points at a different cause. See the flash
-note below — part of it may yet be recoverable from the chip.
+note below — it is not recoverable: the flash was erased unread on 2026-10-02.
 
 **Why nothing was logged — established on the aircraft 2026-09-20.** Not a missing feature flag.
 `blackbox_device` reads `SPIFLASH`, and there is no `feature BLACKBOX` at 2025.12.2 to be missing:
@@ -205,10 +205,11 @@ failure is completely silent: nothing warns you, and you land believing you have
 `flash_info` reports `totalSize=16777216` and JEDEC `0x852018` — a different manufacturer and
 eight times the capacity. Any sizing argument made against 2 MB was wrong by that factor.
 
-**Unread, and worth reading before it is destroyed:** the flash is full, so it holds logs from
-earlier flights. Whether the newest covers 2026-09-03 is unknown. Download it before erasing — even
-with `debug_mode` on `GYRO_FILTERED` and no `RTH` fields, an altitude and motor-output trace would
-distinguish a steady sink from a clean cutoff, which is exactly the question above.
+**Erased unread, 2026-10-02 — the old logs are gone.** `flash_info` still read `usedSize` equal to
+`totalSize` (16777216) that day, then `flash_erase` and a re-read gave `usedSize=0`. The contents
+were not downloaded first. Whatever the full flash held — possibly flights up to 2026-09-03, which
+might have distinguished a steady sink from a clean cutoff — cannot be recovered. *Previously this
+passage said to download it before erasing.*
 
 **Leading hypothesis, unconfirmed:** `ap_hover_throttle` was at the `1275` default while this
 airframe hovers near 34% (`1340`). At rescue onset the integrator is reset and target altitude
@@ -226,7 +227,8 @@ running. Bands tabulated in `FAILSAFE.md` under *Where you can and cannot trigge
 **Second field trigger, 2026-10-01, on the Oxbot R1: it came home.** Switch-triggered on SD. It
 climbed to about 30 m, flew back toward the pilot "bunny hopping" — oscillating in altitude — and
 began its descent over a tree, so the pilot flipped SD off and flew it manually; control returned
-at once. Whether it was logged is not known. `ap_hover_throttle` was still `1340`; the pilot's
+at once. Almost certainly **not logged**: the flash read full on 2026-09-20 and still full on
+2026-10-02, so there was nowhere to write. `ap_hover_throttle` was still `1340`; the pilot's
 reading of hover on the same flight was **about 42% (`1420`)**, on a **4S 850 mAh** pack — larger
 than BetaFPV's recommended 4S 580/680 mAh (`pavo20-pro-ii/HARDWARE.md`), which the pilot thinks
 is too heavy for it.
