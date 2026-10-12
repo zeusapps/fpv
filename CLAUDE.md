@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Guidance for Claude Code when working in this repository.
+Shared repository instructions for Claude Code and Codex. Codex reads this file through `AGENTS.md`.
 
 ## Start here
 
@@ -82,27 +82,33 @@ see exactly which options a cloud build was compiled with.
 ## OpenSpec
 
 This project uses OpenSpec. Specs live in `openspec/specs/`, changes in `openspec/changes/`.
-The workflow profile is the `core` set plus `ff`: propose, explore, apply, update, sync, archive,
-ff. Start a change with `/opsx:propose`, revise its plan with `/opsx:update`, implement with
-`/opsx:apply`. `new`, `continue`, `bulk-archive`, `verify` and `onboard` are not installed.
+Both agents have 12 OpenSpec workflows: propose, explore, apply, update, sync, archive, ff,
+new, continue, bulk-archive, verify, and onboard.
+Claude Code commands live in `.claude/commands/opsx/`, with skills in `.claude/skills/`.
+Codex skills live in `.agents/skills/`.
 
-### Local customisations to the generated files
+Start a change with `/opsx:propose` in Claude Code or `$openspec-propose` in Codex.
+Revise its plan with `/opsx:update` or `$openspec-update-change`.
+Implement it with `/opsx:apply` or `$openspec-apply-change`.
+See `README.md` for the complete command table.
 
-`openspec update` rewrites everything under `.claude/commands/opsx/` and `.claude/skills/` from
-its own templates and preserves no edits. Two customisations must be re-applied after every
-update:
+### Local workflow rules
 
-1. **Step 0, the CLI version check** — in `.claude/commands/opsx/propose.md` and in the
-   `openspec-propose` skill. It compares `openspec --version` against
-   `npm view @fission-ai/openspec version` and offers the upgrade if they differ. Both files also
-   need `Bash(npm view:*)` added to `allowed-tools`.
-2. **The `/opsx:ff` alias** — `.claude/commands/opsx/ff.md` is hand-written and delegates to the
-   `openspec-propose` skill. `ff` is kept in the profile only so the file is regenerated rather
-   than deleted as drift. After an update it reverts to the genuine fast-forward workflow, which
-   still works but has no planning boundary.
+Keep these rules here because `openspec update` replaces the generated commands and skills.
+Apply them to both agents:
 
-Never run `openspec update --force` in this repo. It deletes the OpenSpec prompt files under
-`~/.codex/prompts/` and writes a stale `.agents/skills/` tree into the working directory.
+1. **CLI version examination before a proposal.** Run `openspec --version` and
+   `npm view @fission-ai/openspec version`. Compare the results. Offer an upgrade if the versions
+   differ. Do not upgrade the installed CLI without the user's approval.
+   If the registry is unavailable, report that limitation and continue with the installed CLI.
+2. **The `ff` alias.** Treat `/opsx:ff`, `opsx ff`, and `$openspec-ff-change` as requests for
+   the `openspec-propose` workflow. Prepare the artifacts, then present them for review.
+   Start implementation when the user requests the apply workflow.
+
+Keep generated OpenSpec files in `.claude/` and `.agents/skills/` under version control.
+After an OpenSpec update, examine the diff and make sure both agents still have the required workflows.
+Never run `openspec update --force` in this repository.
+A previous forced update removed OpenSpec prompts from `~/.codex/prompts/` and wrote obsolete repository skills.
 
 Specs here describe **aircraft configuration requirements** — what a config must guarantee, and
 why — rather than software behaviour. A spec is the right home for a constraint that outlived the

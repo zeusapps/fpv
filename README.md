@@ -75,6 +75,41 @@ header comment claimed it "always stays black-on-white"; the code never did. A r
 displays something plausible and does not scan is worse than one that visibly fails, because you
 only find out standing in a field.
 
+## AI assistants
+
+This repository supports Claude Code and Codex.
+Open the repository folder in Codex. `AGENTS.md` directs Codex to the shared instructions in `CLAUDE.md`.
+The repository includes OpenSpec skills in `.agents/skills/` for Codex and `.claude/skills/` for Claude Code.
+Install the OpenSpec CLI if `openspec --version` fails:
+
+```powershell
+npm install -g @fission-ai/openspec
+```
+
+Use these commands with either agent:
+
+| Task | Claude Code | Codex |
+|---|---|---|
+| Prepare a complete proposal | `/opsx:propose` | `$openspec-propose` |
+| Explore a question | `/opsx:explore` | `$openspec-explore` |
+| Implement a change | `/opsx:apply` | `$openspec-apply-change` |
+| Revise a plan | `/opsx:update` | `$openspec-update-change` |
+| Sync the main specs | `/opsx:sync` | `$openspec-sync-specs` |
+| Archive a change | `/opsx:archive` | `$openspec-archive-change` |
+| Prepare a proposal through the local alias | `/opsx:ff` | `$openspec-ff-change` |
+| Start a change step by step | `/opsx:new` | `$openspec-new-change` |
+| Create the next artifact | `/opsx:continue` | `$openspec-continue-change` |
+| Archive multiple changes | `/opsx:bulk-archive` | `$openspec-bulk-archive-change` |
+| Verify a change | `/opsx:verify` | `$openspec-verify-change` |
+| Learn the workflow | `/opsx:onboard` | `$openspec-onboard` |
+
+For example, use `$openspec-propose <description>` in Codex to prepare a change.
+Use `$openspec-apply-change <change-name>` when you want to implement it.
+The local `ff` alias follows the proposal workflow and stops after the artifacts are ready for review.
+
+Codex setup references: [repository instructions](https://learn.chatgpt.com/docs/agent-configuration/agents-md)
+and [repository skills](https://learn.chatgpt.com/docs/build-skills).
+
 ## Licence
 
 MIT for the documentation and configs. Betaflight source excerpts quoted in the docs are GPLv3 and
