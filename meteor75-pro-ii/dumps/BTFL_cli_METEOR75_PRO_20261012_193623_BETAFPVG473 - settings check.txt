@@ -1,0 +1,46 @@
+# 
+# get thr_hover
+thr_hover = 50
+rateprofile 0
+Allowed range: 0 - 100
+
+# get rateprofile_name
+rateprofile_name = -
+rateprofile 0
+String length: 1 - 8
+
+# get osd_ah
+osd_ah_max_pit = 20
+Allowed range: 0 - 90
+
+osd_ah_max_rol = 40
+Allowed range: 0 - 90
+
+osd_ah_invert = OFF
+Allowed values: OFF, ON
+
+osd_ah_sbar_pos = 313
+Allowed range: 0 - 65535
+
+osd_ah_pos = 185
+Allowed range: 0 - 65535
+
+# get osd_stick_overlay
+osd_stick_overlay_left_pos = 341
+Allowed range: 0 - 65535
+
+osd_stick_overlay_right_pos = 341
+Allowed range: 0 - 65535
+
+osd_stick_overlay_radio_mode = 2
+Allowed range: 1 - 4
+
+# get osd_rate_profile_name
+osd_rate_profile_name_pos = 341
+Allowed range: 0 - 65535
+
+# get osd_sys_vtx_temp
+osd_sys_vtx_temp_pos = 341
+Allowed range: 0 - 65535
+
+# 

@@ -6,7 +6,8 @@ context: |
   setup documentation needed to rebuild each aircraft.
 
   Aircraft: Pavo20 Pro II (2.2" ducted cinewhoop, BETAFPVG473_V3, DJI O4 Air Unit Pro),
-  Meteor75 Pro (1S whoop, BETAFPVG473), FireFly25 (2.5", FLYWOOF405S_AIO).
+  Meteor75 Pro (1S whoop, BETAFPVG473), Meteor75 Pro II (1S whoop, BETAFPVG473, BMI270,
+  DJI O4 Wide Air Unit, Oxbot R1 setup), FireFly25 (2.5", FLYWOOF405S_AIO).
 
   There is no test suite. Verification means pasting a config into a real flight controller
   and flying it. A wrong value is a crash, a burned motor, or an injury - not a red test.

@@ -26,6 +26,8 @@ channel table and differ between aircraft:
 - **Pavo20 Pro II** — `../../pavo20-pro-ii/BINDING_GUIDE.md`, *Switch layout used by these configs*;
   the CH10 rescue line is in `../../pavo20-pro-ii/FAILSAFE.md`
 - **Meteor75 Pro** — `../../meteor75-pro/README.md`, *Switches*
+- **Meteor75 Pro II** — [aircraft switch table](../../meteor75-pro-ii/README.md#switches).
+  Its current setup targets the Oxbot R1. Pro II operation on the V12 MAX remains unverified.
 
 ## ELRS link
 

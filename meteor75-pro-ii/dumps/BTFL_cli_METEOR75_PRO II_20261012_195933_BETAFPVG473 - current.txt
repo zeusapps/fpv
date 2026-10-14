@@ -1,0 +1,205 @@
+# 
+# diff all
+
+# version
+# Betaflight / STM32G47X (G473) 2025.12.5-alpha Jun 25 2026 / 03:24:50 (eb2bb5a33) MSP API: 1.47
+# config rev: 1359bbe
+
+# start the command batch
+batch start
+
+# reset configuration to default settings
+defaults nosave
+
+board_name BETAFPVG473
+manufacturer_id BEFH
+# mcu_id redacted - per-board identity
+# signature redacted
+
+# name: Meteor75 Pro II
+
+# feature
+feature TELEMETRY
+feature LED_STRIP
+feature OSD
+
+# serial
+serial UART2 0 115200 57600 0 115200
+serial UART4 131073 115200 57600 0 115200
+
+# beacon
+beacon RX_LOST
+beacon RX_SET
+
+# aux
+aux 0 0 0 1700 2100 0 0
+aux 1 1 1 900 1300 0 0
+aux 2 13 3 1700 2100 0 0
+aux 3 35 1 1700 2100 0 0
+aux 4 36 2 1700 2100 0 0
+
+# adjrange
+adjrange 0 0 4 900 1200 12 4 0 0
+adjrange 1 0 4 1375 1675 12 4 0 0
+adjrange 2 0 4 1800 2100 12 4 0 0
+
+# master
+set gyro_lpf1_static_hz = 0
+set gyro_lpf2_static_hz = 625
+set dyn_notch_count = 1
+set dyn_notch_q = 500
+set dyn_notch_min_hz = 160
+set dyn_notch_max_hz = 500
+set gyro_lpf1_dyn_min_hz = 0
+set acc_calibration = -29,5,23,1
+set baro_hardware = NONE
+set dshot_bidir = ON
+set dshot_bitbang = AUTO
+set motor_pwm_protocol = DSHOT300
+set motor_poles = 12
+set align_board_yaw = -90
+set vbat_max_cell_voltage = 440
+set vbat_warning_cell_voltage = 345
+set ibata_scale = 550
+set ibata_offset = -100
+set small_angle = 180
+set simplified_gyro_filter_multiplier = 125
+set osd_rssi_dbm_alarm = -99
+set osd_vbat_pos = 2561
+set osd_rssi_pos = 192
+set osd_link_quality_pos = 2497
+set osd_rssi_dbm_pos = 2465
+set osd_rsnr_pos = 160
+set osd_tim_1_pos = 386
+set osd_tim_2_pos = 2145
+set osd_remaining_time_estimate_pos = 33
+set osd_flymode_pos = 2049
+set osd_throttle_pos = 2113
+set osd_vtx_channel_pos = 33
+set osd_crosshairs_pos = 272
+set osd_ah_sbar_pos = 314
+set osd_ah_pos = 2149
+set osd_current_pos = 2592
+set osd_mah_drawn_pos = 2625
+set osd_craft_name_pos = 2579
+set osd_home_dist_pos = 98
+set osd_flight_dist_pos = 130
+set osd_warnings_pos = 14709
+set osd_avg_cell_voltage_pos = 44
+set osd_pit_ang_pos = 2433
+set osd_rol_ang_pos = 2401
+set osd_disarmed_pos = 267
+set osd_esc_tmp_pos = 129
+set osd_esc_rpm_pos = 150
+set osd_core_temp_pos = 225
+set osd_stick_overlay_left_pos = 2506
+set osd_stick_overlay_right_pos = 2524
+set osd_rate_profile_name_pos = 2081
+set osd_sys_vtx_temp_pos = 2369
+set craft_name = Meteor75 Pro II
+
+profile 0
+
+# profile 0
+set profile_name = GF 1811
+set dterm_lpf1_dyn_min_hz = 82
+set dterm_lpf1_dyn_max_hz = 165
+set dterm_lpf1_static_hz = 82
+set dterm_lpf2_static_hz = 165
+set throttle_boost = 0
+set p_pitch = 52
+set i_pitch = 89
+set d_pitch = 42
+set f_pitch = 73
+set p_roll = 40
+set i_roll = 67
+set d_roll = 26
+set f_roll = 56
+set p_yaw = 40
+set i_yaw = 67
+set f_yaw = 56
+set d_max_roll = 30
+set d_max_pitch = 48
+set auto_profile_cell_count = 1
+set feedforward_smooth_factor = 60
+set feedforward_jitter_factor = 12
+set dyn_idle_min_rpm = 30
+set simplified_master_multiplier = 85
+set simplified_i_gain = 95
+set simplified_d_gain = 105
+set simplified_pi_gain = 105
+set simplified_d_max_gain = 40
+set simplified_feedforward_gain = 55
+set simplified_pitch_d_gain = 140
+set simplified_pitch_pi_gain = 125
+set simplified_dterm_filter_multiplier = 110
+set tpa_rate = 70
+
+profile 1
+
+profile 2
+
+profile 3
+
+# restore original profile selection
+profile 0
+
+rateprofile 0
+
+# rateprofile 0
+set rateprofile_name = Stock
+
+rateprofile 1
+
+# rateprofile 1
+set rateprofile_name = Cine
+set roll_rc_rate = 4
+set pitch_rc_rate = 4
+set yaw_rc_rate = 4
+set roll_expo = 45
+set pitch_expo = 45
+set yaw_expo = 40
+set roll_srate = 45
+set pitch_srate = 45
+set yaw_srate = 40
+
+rateprofile 2
+
+# rateprofile 2
+set rateprofile_name = Park
+set roll_rc_rate = 5
+set pitch_rc_rate = 5
+set yaw_rc_rate = 5
+set roll_expo = 50
+set pitch_expo = 50
+set yaw_expo = 45
+set roll_srate = 60
+set pitch_srate = 60
+set yaw_srate = 54
+
+rateprofile 3
+
+# restore original rateprofile selection
+rateprofile 0
+
+# save configuration
+save
+# status
+MCU: STM32G474 CLK=168MHz (PLLR-HSI), Vref=3.31V, Core temp=31degC
+STACK: 2048b (0x2001fff0)
+CONFIG: CONFIGURED (3948b / 8192b)
+
+DEVICES DETECTED: SPI=1, I2C=0 (0 errors)
+GYRO: (1) BMI270 enabled locked dma
+ACC: BMI270
+OSD: MSP (53 x 20)
+FLASH: JEDEC ID=0x00852018 16M
+
+BUILD KEY: 0fc940a951a76ec788851f939db8ed94 (2025.12.4)
+
+System Uptime: 459 seconds, Current Time: 2026-10-12T17:59:31.330+00:00
+CPU:41%, cycle time: 317, GYRO rate: 3154, RX rate: 82, System rate: 10
+Voltage: 0.70V (0S battery - NOT PRESENT)
+Arming disable flags: NOPREARM CLI MSP DSHOT_TELEM
+
+# 

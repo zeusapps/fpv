@@ -9,12 +9,22 @@ that differs per **radio** lives in that radio's folder.
 | Radio | Firmware | Document | Status |
 |---|---|---|---|
 | HelloRadio V12 MAX | EdgeTX | `v12-max/README.md` | The fleet's radio to date. |
-| Oxbot R1 | OXBOT OS | `oxbot-r1/README.md` | On trial from 2026-09-30. Linked to both aircraft; not yet bench-checked or flown. |
+| Oxbot R1 | OXBOT OS | [R1 setup](oxbot-r1/README.md) | Pavo20 Pro II and Meteor75 Pro bench checks/flights recorded. Meteor75 Pro II first flight reported; remaining checks pending. |
 | Radiomaster Pocket | — | not written up | |
 | DJI RC3 | — | not written up | DJI radios reach these aircraft over SBUS through the air unit — the `*_SBUS_V1.txt` configs — not over ELRS. |
 
 Every radio has to deliver the channels each aircraft's config reads, on the right kind of control.
 That rule, and how it is checked, is `../openspec/specs/radio/channel-mapping/spec.md`.
+
+The [Meteor75 Pro II](../meteor75-pro-ii/README.md) uses the existing R1 channel assignments.
+Its SC profile order differs from the older Meteor; use the aircraft's own table.
+The pilot reported its binding phrase already configured on 2026-10-12.
+The pilot confirmed correct stick-channel responses on 2026-10-12.
+The pilot also confirmed its switch channels and positions that day, before configuration application.
+After application, the pilot confirmed its mode and adjustment ranges respond correctly.
+
+The pilot then reported a first flight and correct battery indication on the R1 and OSD on 2026-10-12.
+The remaining hardware checks and flight details are in the aircraft documentation.
 
 **Most of this file was written for the V12 MAX and needs EdgeTX.** Those sections say so at the
 top. What is not marked applies to any ELRS radio.

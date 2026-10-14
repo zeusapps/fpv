@@ -18,9 +18,95 @@ number — `HANDOFF.md` under *GPS Rescue*, not "item 2".
 |---|---|
 | **Pavo20 Pro II** | Flying. Rewired 2026-09-01; moved to the UBLOX GPS provider 2026-09-03. Failsafe is GPS Rescue since 2026-10-02 — an accepted risk, never seen to land. Active work is here. |
 | **Meteor75 Pro** | Configs rewritten 2026-09-29 after the aircraft was found to match no committed file. Flown 2026-09-30, six packs, pilot reports it much better. SBUS variant untested; accelerometer suspect. |
+| **Meteor75 Pro II** | First flight reported 2026-10-12; battery indication correct on R1 and OSD. Saved configuration and calibration verified. Flight details and remaining bench checks pending. |
 | **FireFly25** | Bare defaults capture only. Not actively worked on. |
 | **Radio (V12 MAX)** | GPSQR widget bench-verified 2026-09-03. Field checks outstanding; two known defects, one accepted, one open. |
 | **Radio (Oxbot R1)** | On trial against the V12 from 2026-09-30. Linked to both aircraft by binding phrase. Both aircraft bench-checked and flown on it (2026-10-01). Rescue switch works; R1 has alarms. |
+
+## Meteor75 Pro II — new aircraft setup
+
+The pilot supplied a baseline `diff all` and `status` capture on 2026-10-12.
+The aircraft reports `BETAFPVG473`, BMI270, and Betaflight `2025.12.5-alpha`, commit `eb2bb5a33`.
+The baseline tune is `GF 1811`; board yaw is -90 degrees.
+The baseline capture is in [meteor75-pro-ii/dumps/](meteor75-pro-ii/dumps/), with board identity/signature values redacted.
+
+[M75_PRO_II_ELRS_V1.txt](meteor75-pro-ii/M75_PRO_II_ELRS_V1.txt) preserves the Pro II tune and hardware settings.
+It restores the older Meteor mode layout on the Oxbot R1.
+SC low/middle/high selects Pro II Stock / Cine / Park.
+All three profiles use the Pro II stock throttle curve.
+The OSD uses all 31 supported v1 position values.
+
+The pilot reported the binding phrase already configured on 2026-10-12.
+The pilot also reported O4 activation and the DJI Goggles 3 link complete that day.
+DJI firmware versions are not recorded. The pilot confirmed the OSD layout in the goggles on 2026-10-14.
+
+The pilot confirmed correct CH1–CH4 responses in the Receiver tab on 2026-10-12.
+The pilot also confirmed the switch channels, positions, and momentary/latching behaviour that day, before configuration application.
+After application, the pilot confirmed the mode and adjustment ranges respond correctly on 2026-10-12.
+The pilot then reported a first flight and correct battery indication on the radio and OSD that day.
+The pilot confirmed flights on Stock and Cine.
+Park remains unrecorded.
+
+The pilot preferred Stock indoors; Cine felt less satisfactory on the second battery.
+Both flights used LAVA II 580 mAh packs; the pilot also uses 680 mAh packs.
+The main difficulty was precise throttle control within the available indoor height and limited usable stick travel.
+The pilot considered greater caution during the first flight as a possible influence.
+The pilot confirmed that Stock felt "perfect" outdoors on 2026-10-14.
+Outdoor Cine/Park observations remain pending.
+
+Stock, Cine, and Park use the same linear throttle curve.
+Keep the current settings. Any later rate or throttle adjustment will use a separate OpenSpec change.
+
+The 2026-10-12 19:36:23 settings capture confirms all required CLI settings, including `thr_hover` and the additional OSD positions.
+The 2026-10-12 19:59:33 capture confirms the saved configuration after USB restart; it is the sole `current` capture.
+The pilot reported successful accelerometer calibration on 2026-10-12 after the configuration blocks.
+The pilot also confirmed correct roll/pitch tilt responses and return to level that day.
+
+The comparison found no unexplained difference: all 134 explicit settings match, with 28 verified default omissions and actual calibration.
+It also confirms the tune, all OSD positions, mode/adjustment ranges, and profile 0 selections.
+The current calibration is `-29,5,23,1`.
+Current status has RX rate 82, no battery, and `NOPREARM CLI MSP DSHOT_TELEM` flags.
+
+The supplied status had RX rate 0, no battery, and `RXLOSS CLI MSP DSHOT_TELEM` flags.
+Do not diagnose those flags as hardware faults without battery-powered observations.
+
+| Verification stage | State |
+|---|---|
+| Source review | Complete; evidence in [SOURCE_REVIEW.md](meteor75-pro-ii/SOURCE_REVIEW.md) |
+| O4 activation | Complete, as the pilot reported on 2026-10-12; DJI firmware version not recorded |
+| CLI syntax validation | Complete after corrected input, batch restart, save, and matching capture after USB restart |
+| Bench verification | Channels, modes, adjustments, calibration, and correct radio/OSD battery indication confirmed; remaining checks open |
+| Flight verification | Stock felt perfect outdoors on 2026-10-14; motors okay and video very good. Outdoor Cine/Park and Angle/Acro observations pending. |
+
+Individual motor results remain unrecorded.
+The pilot skipped the link-loss bench test on 2026-10-14; saved `DROP` is confirmed, but its actual response remains untested.
+The pilot flew before these checks were recorded; the first flight does not complete them.
+
+The 2026-10-14 status capture confirms PID profile 0 (`GF 1811`), rate profile 0 (`Stock`), and saved failsafe `DROP`.
+It reports 0.71 V, no detected battery, RX rate 0, and `RXLOSS NOPREARM CLI MSP DSHOT_TELEM` flags.
+The pilot confirmed USB power only during this capture, with no battery connected.
+The pilot also reported flights on 2026-10-14 with no observed battery problems.
+
+The later battery-powered status on 2026-10-14 confirms 3.82 V and `1S battery - OK`.
+DSHOT_TELEM is absent; RX rate remains 0 with RXLOSS.
+The pilot confirmed that the R1 was off during this capture.
+The earlier channel observations and flights establish receiver operation with the R1 on.
+Individual motor verification remains open.
+
+The pilot confirmed refusal to ARM without PREARM after the fresh-boot procedure on 2026-10-14.
+The pilot also confirmed normal SF/SA arm/disarm operation through the reported flights and response to the follow-up question.
+
+The pilot confirmed the v1 OSD layout and Stock / Cine / Park display on 2026-10-14, with no reported OSD problems.
+All three SC selections are confirmed. A Park flight report remains pending.
+
+Follow [SETUP.md](meteor75-pro-ii/SETUP.md) for the remaining hardware work.
+The pilot reported acceptable motor temperatures and very good video on 2026-10-14.
+The pilot strongly preferred the wide camera and stabilization over the Meteor v1.
+The pilot confirmed Stock outdoors; no measured motor temperatures or pack capacities were supplied for that day's flights.
+Do not give a capture the `current` label until it follows a verified configuration application and comparison.
+The pilot requested archive, commit, and push on 2026-10-14 after review of the incomplete tasks.
+The change is [archived](openspec/changes/archive/2026-10-14-configure-meteor75-pro-ii/); unperformed hardware tasks remain unchecked.
+The main spec is [meteor75-pro-ii/flight-config](openspec/specs/meteor75-pro-ii/flight-config/spec.md).
 
 ## Pavo20 Pro II — current configuration
 

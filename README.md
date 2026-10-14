@@ -13,10 +13,13 @@ Current state, outstanding work and open questions: **[HANDOFF.md](HANDOFF.md)**
 |---|---|---|---|---|
 | [Pavo20 Pro II](pavo20-pro-ii/) | 2.2" ducted cinewhoop, 2-4S | `BETAFPVG473_V3` (Cube G4 30A) | DJI O4 Air Unit Pro | ELRS / SBUS |
 | [Meteor75 Pro](meteor75-pro/) | 75mm 1S whoop | `BETAFPVG473` | DJI air unit | ELRS |
+| [Meteor75 Pro II](meteor75-pro-ii/) | 1S whoop | `BETAFPVG473` (BMI270) | DJI O4 Wide Air Unit | ELRS / Oxbot R1; hardware checks pending |
 | [FireFly25](firefly25/) | 2.5" | `FLYWOOF405S_AIO` | DJI (MSP) | ELRS |
 
-All three are flown with one **HelloRadio V12 MAX**. Radio-side setup — telemetry, alarms, TX
-power, and the GPSQR recovery widget — is in **[radio/](radio/)**.
+The original fleet uses the **HelloRadio V12 MAX**.
+The **Oxbot R1** also flew the Pavo20 Pro II and Meteor75 Pro.
+The new Meteor75 Pro II setup targets the Oxbot R1; its hardware checks remain pending.
+Radio setup, telemetry, alarms, TX power, and the GPSQR widget are in **[radio/](radio/)**.
 
 ## Layout
 

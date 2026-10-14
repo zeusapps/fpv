@@ -8,6 +8,15 @@ Being trialled against the V12 MAX from 2026-09-30. Flies the Pavo20 Pro II and 
 **Both aircraft bench-checked (2026-09-30) and flown on it (2026-10-01)**
 — see *What is not verified* at the bottom.
 
+The [Meteor75 Pro II setup](../../meteor75-pro-ii/SETUP.md) uses the same R1 channel assignments.
+The pilot confirmed correct stick-channel responses on 2026-10-12.
+The pilot also confirmed its switch channels and positions that day, before configuration application.
+After application, the pilot confirmed its mode and adjustment ranges respond correctly.
+The pilot then reported a first flight and correct battery indication on the radio and OSD that day.
+
+The remaining hardware checks and flight details are in the aircraft documentation.
+The pilot reported its binding phrase already configured that day.
+
 Menu names below are from the Oxbot R1 Quick Start Guide
 (`store-fnms1h2bjh.mybigcommerce.com/product_images/oxbot_r1_rc/manual/Oxbot%20R1_QSG_en.html`,
 read 2026-09-30). Swipe up on the home screen for **Quick Settings**; **System Settings** is at the
@@ -46,6 +55,7 @@ What each position does is set on the aircraft and is not repeated here:
 - **Pavo20 Pro II** — `../../pavo20-pro-ii/BINDING_GUIDE.md`, *Switch layout used by these configs*;
   the CH10 rescue line is in `../../pavo20-pro-ii/FAILSAFE.md`
 - **Meteor75 Pro** — `../../meteor75-pro/README.md`, *Switches*
+- **Meteor75 Pro II** — [aircraft switch table](../../meteor75-pro-ii/README.md#switches); hardware checks pending.
 
 ### Why rescue is on SD and not a paddle
 
@@ -71,15 +81,16 @@ The rules behind both choices are requirements, not preferences:
 
 ## Settings
 
-One R1 model flies both aircraft, as on the V12. Set these once.
+One R1 model flies the two verified aircraft.
+Use its existing channel assignments for the new Pro II; verify that aircraft before flight.
 
 | Setting | Where | Value | Why |
 |---|---|---|---|
-| Models | Model Selection | **one**, for both aircraft | The mapping is identical on both; the Meteor75 ignores CH10. Split only if a real per-aircraft difference appears. |
+| Models | Model Selection | Keep the existing fleet model | The new Pro II configuration uses the same physical channel assignments. Hardware checks remain pending. |
 | Channel mapping | System Settings → Channel Settings → *Mapped Switch* | table above | |
-| Output Range | Channel Settings | default (±100%) | The Meteor75's CH9 bands are 900–1200 / 1375–1675 / 1800–2100. A narrowed range can miss one. |
+| Output Range | Channel Settings | default (±100%) | Compare all positions with the selected aircraft's channel table. A narrowed range can miss a band. |
 | Center Point | Channel Settings | default | Same reason: the middle position has to land near 1500. |
-| Channel Reverse | Channel Settings | only on a channel that reads backwards | ARM must read above 1700 with SA up. |
+| Channel Reverse | Channel Settings | only on a channel that reads backwards | Confirm the direction against the selected aircraft's channel table. |
 | Packet Rate | Quick Settings → ELRS Lua | **250Hz** — a standard rate, not a "Full" one | See below. |
 | Telem Ratio | Quick Settings → ELRS Lua | anything but Off | Off loses `RxBt`, `GPS`, `Sats` and *Find Drone*. |
 | Model Match | Quick Settings → ELRS Lua | **Off** | Unused in this fleet; turning it on is a new way to fail to connect. |
@@ -124,8 +135,7 @@ Then, with the quad on USB and the **Receiver** tab open:
 1. **SA** — AUX1 goes above 1700 when up. Modes tab: ARM range lights.
 2. **SB** — AUX2 shows three values: low under 1300 (ANGLE), mid, high above 1700 (TURTLE).
 3. **SF** — AUX3 goes above 1700 only while held. PREARM lights.
-4. **SC** — AUX5 shows three values. On the Meteor75 they must fall inside 900–1200, 1375–1675 and
-   1800–2100.
+4. **SC** — AUX5 shows three values. Compare each value and selection with the selected aircraft's rate table.
 5. **SE** — AUX4 goes above 1700 and **stays there after release**. The quad beeps.
 6. **SD, Pavo20 only** — AUX6 goes above 1700 and GPS RESCUE lights. **If AUX6 sits at exactly
    1500 while SD moves, CH10 is not being sent** — Betaflight presets every channel to 1500 and only
@@ -167,6 +177,13 @@ As of 2026-10-01.
   Pavo20 `RxBt` is pack voltage unless `report_cell_voltage` is ON.
 
 **Not verified:**
+
+- **Meteor75 Pro II, 2026-10-12:** the phrase is configured, as the pilot reported.
+  The pilot also reported O4 activation, the Goggles 3 link, and correct stick-channel responses.
+  The pilot also confirmed the switch channels and positions before configuration application.
+  The pilot then confirmed the mode and adjustment ranges after application.
+  The pilot then reported a first flight and correct battery indication on the radio and OSD.
+  Remaining hardware checks and flight details are in its [setup procedure](../../meteor75-pro-ii/SETUP.md).
 
 - **Find Drone with no fix — not tested, by the pilot's choice** (2026-10-01): it will only be used
   while the GPS is working. Worth knowing why that is not quite the same thing: the Pavo20 sends

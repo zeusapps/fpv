@@ -1,0 +1,69 @@
+# 
+# status
+MCU: STM32G474 CLK=168MHz (PLLR-HSI), Vref=3.31V, Core temp=37degC
+STACK: 2048b (0x2001fff0)
+CONFIG: CONFIGURED (3948b / 8192b)
+
+DEVICES DETECTED: SPI=1, I2C=0 (0 errors)
+GYRO: (1) BMI270 enabled locked dma
+ACC: BMI270
+OSD: MSP (53 x 20)
+FLASH: JEDEC ID=0x00852018 16M
+
+BUILD KEY: 0fc940a951a76ec788851f939db8ed94 (2025.12.4)
+
+System Uptime: 22 seconds, Current Time: 2026-10-14T17:08:51.983+00:00
+CPU:36%, cycle time: 318, GYRO rate: 3144, RX rate: 0, System rate: 9
+Voltage: 0.71V (0S battery - NOT PRESENT)
+Arming disable flags: RXLOSS NOPREARM CLI MSP DSHOT_TELEM
+
+# get profile_name
+rateprofile_name = Stock
+rateprofile 0
+String length: 1 - 8
+Default value: -
+
+profile_name = GF 1811
+profile 0
+String length: 1 - 8
+Default value: -
+
+osd_rate_profile_name_pos = 2081
+Allowed range: 0 - 65535
+Default value: 341
+
+osd_pid_profile_name_pos = 341
+Allowed range: 0 - 65535
+
+osd_profile_name_pos = 341
+Allowed range: 0 - 65535
+
+# get failsafe
+msp_override_failsafe = OFF
+Allowed values: OFF, ON
+
+failsafe_delay = 15
+Allowed range: 1 - 200
+
+failsafe_landing_time = 60
+Allowed range: 0 - 250
+
+failsafe_throttle = 1000
+Allowed range: 750 - 2250
+
+failsafe_switch_mode = STAGE1
+Allowed values: STAGE1, KILL, STAGE2
+
+failsafe_throttle_low_delay = 100
+Allowed range: 0 - 300
+
+failsafe_procedure = DROP
+Allowed values: AUTO-LAND, DROP, GPS-RESCUE
+
+failsafe_recovery_delay = 5
+Allowed range: 1 - 200
+
+failsafe_stick_threshold = 30
+Allowed range: 0 - 50
+
+# 
