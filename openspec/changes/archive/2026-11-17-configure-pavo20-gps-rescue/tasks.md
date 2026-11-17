@@ -55,6 +55,8 @@ prints — and blackbox was already enabled via `blackbox_device = SPIFLASH`. Wh
   a timed 60 s, read `flash_info`, and confirm the used bytes extrapolate to a complete flight at
   `blackbox_sample_rate = 1/4` (allowed: 1/1, 1/2, 1/4, 1/8, 1/16; `pid_process_denom = 2` puts
   logging near 1 kHz). Lower the rate only if the measurement says it does not fit.
+  *Abandoned 2026-11-17: the AIO burned, probably a MOSFET fault. The pilot paused the aircraft.
+  This task is not done. The flash size of a full flight at 1/4 is not measured.*
 - [x] 3.4 Add erasing the flash before each rescue attempt to the test procedure in `FAILSAFE.md`,
   and add reading the `RTH` debug fields after it. Verify the procedure names the three slots and
   what each decodes to.

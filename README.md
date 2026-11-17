@@ -11,14 +11,14 @@ Current state, outstanding work and open questions: **[HANDOFF.md](HANDOFF.md)**
 
 | Quad | Class | Board | Video | Link |
 |---|---|---|---|---|
-| [Pavo20 Pro II](pavo20-pro-ii/) | 2.2" ducted cinewhoop, 2-4S | `BETAFPVG473_V3` (Cube G4 30A) | DJI O4 Air Unit Pro | ELRS / SBUS |
+| [Pavo20 Pro II](pavo20-pro-ii/) | 2.2" ducted cinewhoop, 2-4S | `BETAFPVG473_V3` (Cube G4 30A) | DJI O4 Air Unit Pro | ELRS / SBUS; out of service, AIO burned |
 | [Meteor75 Pro](meteor75-pro/) | 75mm 1S whoop | `BETAFPVG473` | DJI air unit | ELRS |
-| [Meteor75 Pro II](meteor75-pro-ii/) | 1S whoop | `BETAFPVG473` (BMI270) | DJI O4 Wide Air Unit | ELRS / Oxbot R1; hardware checks pending |
+| [Meteor75 Pro II](meteor75-pro-ii/) | 1S whoop | `BETAFPVG473` (BMI270) | DJI O4 Wide Air Unit | ELRS / Oxbot R1; in service |
 | [FireFly25](firefly25/) | 2.5" | `FLYWOOF405S_AIO` | DJI (MSP) | ELRS |
 
 The original fleet uses the **HelloRadio V12 MAX**.
 The **Oxbot R1** also flew the Pavo20 Pro II and Meteor75 Pro.
-The new Meteor75 Pro II setup targets the Oxbot R1; its hardware checks remain pending.
+The Meteor75 Pro II flies on the Oxbot R1. Its setup closed on 2026-11-17.
 Radio setup, telemetry, alarms, TX power, and the GPSQR widget are in **[radio/](radio/)**.
 
 ## Layout

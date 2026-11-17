@@ -1,4 +1,4 @@
-# Handoff — state of the repo as of 2026-09-03
+# Handoff — state of the repo as of 2026-11-17
 
 Written so a session with no prior context can pick this up. Read this, then
 `docs/betaflight-reference.md`, then the folder for whichever aircraft you are working on.
@@ -16,99 +16,59 @@ number — `HANDOFF.md` under *GPS Rescue*, not "item 2".
 
 | Aircraft | Status |
 |---|---|
-| **Pavo20 Pro II** | Flying. Rewired 2026-09-01; moved to the UBLOX GPS provider 2026-09-03. Failsafe is GPS Rescue since 2026-10-02 — an accepted risk, never seen to land. Active work is here. |
+| **Pavo20 Pro II** | Out of service. The 4S AIO burned; the pilot suspects a MOSFET fault. On pause, with no repair plan. See *Pavo20 Pro II — out of service*. |
 | **Meteor75 Pro** | Configs rewritten 2026-09-29 after the aircraft was found to match no committed file. Flown 2026-09-30, six packs, pilot reports it much better. SBUS variant untested; accelerometer suspect. |
-| **Meteor75 Pro II** | First flight reported 2026-10-12; battery indication correct on R1 and OSD. Saved configuration and calibration verified. Flight details and remaining bench checks pending. |
+| **Meteor75 Pro II** | Setup closed 2026-11-17. The pilot flies it regularly and reports it "exceptional". |
 | **FireFly25** | Bare defaults capture only. Not actively worked on. |
-| **Radio (V12 MAX)** | GPSQR widget bench-verified 2026-09-03. Field checks outstanding; two known defects, one accepted, one open. |
+| **Radio (V12 MAX)** | GPSQR widget bench-verified 2026-09-03. Parked: no aircraft in service has GPS. |
 | **Radio (Oxbot R1)** | On trial against the V12 from 2026-09-30. Linked to both aircraft by binding phrase. Both aircraft bench-checked and flown on it (2026-10-01). Rescue switch works; R1 has alarms. |
 
-## Meteor75 Pro II — new aircraft setup
+## Meteor75 Pro II — in service
 
-The pilot supplied a baseline `diff all` and `status` capture on 2026-10-12.
 The aircraft reports `BETAFPVG473`, BMI270, and Betaflight `2025.12.5-alpha`, commit `eb2bb5a33`.
-The baseline tune is `GF 1811`; board yaw is -90 degrees.
-The baseline capture is in [meteor75-pro-ii/dumps/](meteor75-pro-ii/dumps/), with board identity/signature values redacted.
+The tune is BetaFPV's `GF 1811`. Board yaw is -90 degrees.
+[M75_PRO_II_ELRS_V1.txt](meteor75-pro-ii/M75_PRO_II_ELRS_V1.txt) is the applied configuration.
+SC low/middle/high selects Pro II Stock / Cine / Park on the Oxbot R1.
 
-[M75_PRO_II_ELRS_V1.txt](meteor75-pro-ii/M75_PRO_II_ELRS_V1.txt) preserves the Pro II tune and hardware settings.
-It restores the older Meteor mode layout on the Oxbot R1.
-SC low/middle/high selects Pro II Stock / Cine / Park.
-All three profiles use the Pro II stock throttle curve.
-The OSD uses all 31 supported v1 position values.
+The authoritative capture is the 2026-10-12 19:59:33 `current` file in
+[meteor75-pro-ii/dumps/](meteor75-pro-ii/dumps/). It matched the configuration on all 134
+explicit settings. The calibration in it is `-29,5,23,1`.
 
-The pilot reported the binding phrase already configured on 2026-10-12.
-The pilot also reported O4 activation and the DJI Goggles 3 link complete that day.
-DJI firmware versions are not recorded. The pilot confirmed the OSD layout in the goggles on 2026-10-14.
+The pilot flew it from 2026-10-12 to 2026-11-17 and reported it "exceptional". The pilot closed
+the remaining setup checks on 2026-11-17. Two checks were never done:
 
-The pilot confirmed correct CH1–CH4 responses in the Receiver tab on 2026-10-12.
-The pilot also confirmed the switch channels, positions, and momentary/latching behaviour that day, before configuration application.
-After application, the pilot confirmed the mode and adjustment ranges respond correctly on 2026-10-12.
-The pilot then reported a first flight and correct battery indication on the radio and OSD that day.
-The pilot confirmed flights on Stock and Cine.
-Park remains unrecorded.
+- The individual motor test.
+- The link-loss bench test. The saved failsafe is `DROP`, but nobody saw the actual response.
 
-The pilot preferred Stock indoors; Cine felt less satisfactory on the second battery.
-Both flights used LAVA II 580 mAh packs; the pilot also uses 680 mAh packs.
-The main difficulty was precise throttle control within the available indoor height and limited usable stick travel.
-The pilot considered greater caution during the first flight as a possible influence.
-The pilot confirmed that Stock felt "perfect" outdoors on 2026-10-14.
-Outdoor Cine/Park observations remain pending.
+Do not report these two checks as passed. Any later rate or throttle change uses a separate
+OpenSpec change. The main spec is
+[meteor75-pro-ii/flight-config](openspec/specs/meteor75-pro-ii/flight-config/spec.md).
 
-Stock, Cine, and Park use the same linear throttle curve.
-Keep the current settings. Any later rate or throttle adjustment will use a separate OpenSpec change.
+## Pavo20 Pro II — out of service
 
-The 2026-10-12 19:36:23 settings capture confirms all required CLI settings, including `thr_hover` and the additional OSD positions.
-The 2026-10-12 19:59:33 capture confirms the saved configuration after USB restart; it is the sole `current` capture.
-The pilot reported successful accelerometer calibration on 2026-10-12 after the configuration blocks.
-The pilot also confirmed correct roll/pitch tilt responses and return to level that day.
+**The AIO burned. The pilot reported it on 2026-11-17.** The pilot suspects a MOSFET fault on the
+board. The date of the failure and the cause are not established. No log or photo exists.
 
-The comparison found no unexplained difference: all 134 explicit settings match, with 28 verified default omissions and actual calibration.
-It also confirms the tune, all OSD positions, mode/adjustment ranges, and profile 0 selections.
-The current calibration is `-29,5,23,1`.
-Current status has RX rate 82, no battery, and `NOPREARM CLI MSP DSHOT_TELEM` flags.
+The aircraft is on pause. The pilot did not like the 4S variant and can replace the board with a
+3S AIO. There is no plan for this.
 
-The supplied status had RX rate 0, no battery, and `RXLOSS CLI MSP DSHOT_TELEM` flags.
-Do not diagnose those flags as hardware faults without battery-powered observations.
+Do these steps before you configure a replacement board:
 
-| Verification stage | State |
-|---|---|
-| Source review | Complete; evidence in [SOURCE_REVIEW.md](meteor75-pro-ii/SOURCE_REVIEW.md) |
-| O4 activation | Complete, as the pilot reported on 2026-10-12; DJI firmware version not recorded |
-| CLI syntax validation | Complete after corrected input, batch restart, save, and matching capture after USB restart |
-| Bench verification | Channels, modes, adjustments, calibration, and correct radio/OSD battery indication confirmed; remaining checks open |
-| Flight verification | Stock felt perfect outdoors on 2026-10-14; motors okay and video very good. Outdoor Cine/Park and Angle/Acro observations pending. |
+- Get the board target of the new board. A 3S board can use a target other than `BETAFPVG473_V3`.
+- Do not paste a 4S config onto a 3S board. A config from one cell-count variant does not run
+  correctly on another.
+- Capture a fresh `diff all` from the new board before you paste anything.
+- Calibrate the accelerometer on the airframe. The old calibration and `mcu_id` belong to the
+  burned board.
+- Examine the UART pads against the target of the new board. The GPS and air-unit pin conflict
+  below was specific to the Cube G4.
 
-Individual motor results remain unrecorded.
-The pilot skipped the link-loss bench test on 2026-10-14; saved `DROP` is confirmed, but its actual response remains untested.
-The pilot flew before these checks were recorded; the first flight does not complete them.
+The GPS module, the GPS Rescue procedure and the specs in `openspec/specs/pavo20-pro-ii/` still
+apply to a rebuild. Treat everything that was verified on the old board as unverified on a new
+one. The GPS Rescue change closed on 2026-11-17 with one task not done; see
+[the archive](openspec/changes/archive/2026-11-17-configure-pavo20-gps-rescue/).
 
-The 2026-10-14 status capture confirms PID profile 0 (`GF 1811`), rate profile 0 (`Stock`), and saved failsafe `DROP`.
-It reports 0.71 V, no detected battery, RX rate 0, and `RXLOSS NOPREARM CLI MSP DSHOT_TELEM` flags.
-The pilot confirmed USB power only during this capture, with no battery connected.
-The pilot also reported flights on 2026-10-14 with no observed battery problems.
-
-The later battery-powered status on 2026-10-14 confirms 3.82 V and `1S battery - OK`.
-DSHOT_TELEM is absent; RX rate remains 0 with RXLOSS.
-The pilot confirmed that the R1 was off during this capture.
-The earlier channel observations and flights establish receiver operation with the R1 on.
-Individual motor verification remains open.
-
-The pilot confirmed refusal to ARM without PREARM after the fresh-boot procedure on 2026-10-14.
-The pilot also confirmed normal SF/SA arm/disarm operation through the reported flights and response to the follow-up question.
-
-The pilot confirmed the v1 OSD layout and Stock / Cine / Park display on 2026-10-14, with no reported OSD problems.
-All three SC selections are confirmed. A Park flight report remains pending.
-
-Follow [SETUP.md](meteor75-pro-ii/SETUP.md) for the remaining hardware work.
-The pilot reported acceptable motor temperatures and very good video on 2026-10-14.
-The pilot strongly preferred the wide camera and stabilization over the Meteor v1.
-The pilot confirmed Stock outdoors; no measured motor temperatures or pack capacities were supplied for that day's flights.
-Do not give a capture the `current` label until it follows a verified configuration application and comparison.
-The pilot requested archive, commit, and push on 2026-10-14 after review of the incomplete tasks.
-The change is [archived](openspec/changes/archive/2026-10-14-configure-meteor75-pro-ii/); unperformed hardware tasks remain unchecked.
-The main spec is [meteor75-pro-ii/flight-config](openspec/specs/meteor75-pro-ii/flight-config/spec.md).
-
-## Pavo20 Pro II — current configuration
+The rest of this section is the last configuration of the burned board.
 
 BetaFPV Pavo20 Pro II **4S variant**, board target `BETAFPVG473_V3` (Cube G4 2-4S 30A AIO,
 STM32G474). DJI O4 Air Unit Pro. ELRS receiver, flown with a HelloRadio V12 MAX.
@@ -152,262 +112,45 @@ and why.
 the board's own calibration alone. A paste onto a flashed or fresh board **must** be followed by
 Calibrate Accelerometer — `pavo20-pro-ii/SETUP_GUIDE.md` section 8.
 
-## Verified vs not verified
-
-This distinction matters more than usual — these configs fly real hardware.
-
-**Verified on the aircraft:**
-
-- ELRS config applied, saved, and flown (2026-09-02, on 4S)
-- The rewire is in saved config, not just in a file — confirmed against the 2026-09-03 capture
-- GPS acquires and reports data with the O4 air unit connected — the original fault is fixed
-- UBLOX provider works (2026-09-03): `MON-VER` answered, auto-config completed
-- Outdoor 3D fix, 10 satellites, correct position (2026-09-03). Stationary, partial sky
-- `PAVO20PRO2_ELRS_V1.txt` round-trips: pasted and re-captured 2026-09-03, every `set` line and
-  every `resource` / `timer` / `dma` / `feature` / `serial` / `aux` directive matched, with
-  `acc_calibration` on the board and absent from the file as designed
-- LED strip works on its new pin (PA9); buzzer works on battery
-- Motors, arming, modes all behaving
-
-**NOT verified — treat as unknown:**
-
-- **GPS fix quality in flight.** The 2026-09-03 fix was stationary, on a balcony, under partial
-  sky. Whether it holds a fix while moving, in open field, with motors running and the O4
-  transmitting, is unconfirmed. Do not read the balcony result as clearing GPS Rescue.
-- **GPS Rescue — live as the failsafe, unqualified.** Both blocks are pasted;
-  `get failsafe_procedure` returned `GPS-RESCUE` on 2026-10-02. One switch-triggered rescue has come
-  home (2026-10-01), oscillating, and was taken over before landing. No rescue has been seen to
-  land and none has been logged. See below.
-- **The SBUS config.** `PAVO20PRO2_SBUS_V1.txt` has never been pasted or flown. It was edited on
-  2026-09-03 alongside the ELRS config because it carried the same stale calibration; that changed
-  nothing about its status.
-- **OSD altitude after arming.** It reads ground elevation (~124 m) while disarmed, which is
-  expected. That it zeroes on arming was explained from source but not observed in flight.
-- **GPS telemetry reaching the radio.** The widget has displayed a real position while bound to
-  the Pavo20, which needs the `GPS` sensor in the CRSF stream. `/LOGS/gpsqr_last.txt` has since
-  been deleted, so a `SAVED` position can no longer be another model's — any position the widget
-  now shows on this model is this model's. Confirm the status word reads `LIVE` or an age once,
-  and this is closed.
-
 ## Outstanding work
 
-### 1. GPS Rescue — live as the failsafe, came home once, oscillating
-
-**State as of 2026-10-02: `failsafe_procedure = GPS-RESCUE`, an accepted risk.** The pilot pasted
-block 2 after the 2026-10-01 return and, on 2026-10-02, chose to keep it after being told what is
-unproven: the descent and landing (never run — taken over above a tree), the touchdown disarm, a
-real Rx loss (where `FS_ONLY` no longer forgives a sanity failure, so a failed check disarms in the
-air), the `1420` hover value, and any log at all. The pilot's basis: a rescue that limps home beats
-a certain `DROP`. Recorded in the `pavo20-pro-ii/failsafe` spec. **Revert to `DROP`** if a logged
-rescue disarms in the air, flies away, or does not descend.
-
-Applied and read back the same day: `ap_hover_throttle = 1420`, `debug_mode = RTH`.
-
-*Everything below up to "Second field trigger" describes the DROP-era plan and is kept as history.*
-
-The config is now **two files**, split 2026-09-03 because the halves carry different risk:
-
-- `pavo20-pro-ii/PAVO20PRO2_GPS_RESCUE_TUNING.txt` — the rescue parameters. Touches no failsafe
-  setting. **Safe to paste now, and should be pasted before any switch test** — an unconfigured
-  board runs the firmware defaults, and `ascend_rate` defaults to `750` cm/s, a 7.5 m/s climb
-  demand this airframe cannot meet.
-- `pavo20-pro-ii/PAVO20PRO2_FAILSAFE_GPS_RESCUE.txt` — one line, `failsafe_procedure = GPS-RESCUE`.
-  **Not to be pasted until the switch test in `FAILSAFE.md` has passed.**
-
-**Block 1 is pasted and verified (2026-09-03); block 2 was not at that point** (it is now — see
-the top of this section). A `diff` returned the five
-`gps_rescue_*` lines that differ from default — `ascend_rate`, `descend_rate`, `ground_speed`,
-`descent_dist`, `return_alt` — and correctly omitted the six that equal it. `failsafe_procedure` is
-absent, so it remained at the 2025.12.2 default of `DROP_IT` (`src/main/flight/failsafe.c:78`): the
-aircraft cut motors and fell on signal loss. That was the intended state until the rescue was
-proven; superseded 2026-10-02.
-
-The user chose GPS Rescue over DROP after being told the trade-offs. It is the only failsafe that
-keeps motors running under power, so its failure mode is a flyaway rather than a broken quad.
-`pavo20-pro-ii/FAILSAFE.md` has the full testing procedure — switch-testing in a large open field
-at 40–60 m before it is trusted as a failsafe.
-
-**Resolved 2026-09-03: the CH10 return-to-home switch now reaches Betaflight.** AUX 6 flips on the
-Receiver tab, and `aux 6 46 5 1700 2100 0 0` is applied and confirmed in the saved config (GPS
-Rescue is permanent box ID 46).
-
-The cause was the ELRS switch mode. The radio runs `333Hz Full`, a Full-Resolution rate, and was
-set to Switch Mode **`8ch`**, which at ExpressLRS 3.5.6 packs only `channelData[0..3]` and
-`channelData[5..8]` — CH1–4 and CH6–9. CH10 was never transmitted. Settled on **`12ch Mixed`**,
-which alternates the high group between `channelData[5..8]` and `channelData[9..12]`: CH1–4 stay at
-the full 333Hz, CH5 stays a 1-bit every-packet channel, and CH6–13 arrive at ~166Hz. `16ch Rate/2`
-was tried first and also worked, but it halves the stick rate as well and buys only CH14–16, which
-this aircraft does not use. Per-mode channel map, read off `src/lib/OTA/OTA.cpp` at tag 3.5.6, is
-in `radio/README.md` under *What each Full-Res switch mode actually transmits*.
-
-**`12ch Mixed` forces CH5 to two positions**, because the receiver rebuilds it with
-`channelData[4] = BIT_to_CRSF(ota8->rc.ch4)` (`UnpackChannelData8ch`, the `else` branch). That is
-safe here and was checked: channel 0 is used by `aux 0 0 0 1700 2100` — ARM — and by nothing else.
-Every other `aux` and both `adjrange` lines sit on channels 1–4. **Do not put a 3-position or
-analogue source on CH5 while this mode is set**; it will collapse to two states with no error.
-
-**Ruled out by measurement along the way, so do not re-check:** the EdgeTX mixer (channel monitor
-showed CH10 swinging −100/+100), the module channel range (CH1–CH16), and `max_aux_channels`
-(reads `14`, so `rxChannelCount = MIN(14 + 4, 16) = 16`).
-
-**The config file is now complete.** Both remaining lookups were read off the aircraft on
-2026-09-03 and both already held the right value — `gps_rescue_alt_mode = MAX_ALT` and
-`gps_rescue_sanity_checks = RESCUE_SANITY_FS_ONLY`, each the 2025.12.2 firmware default, now pinned
-explicitly in `PAVO20PRO2_GPS_RESCUE_TUNING.txt`.
-
-**First field trigger, 2026-09-03: the quad disarmed and dropped.**
-
-*First diagnosis, and it was wrong — kept because the branch it describes is real and will be
-mistaken for a fault the next time someone triggers close in.* Within 5 m of home *and* below 4 m
-altitude a rescue hits `RESCUE_ABORT` (`gps_rescue_multirotor.c:725-727`; the 4 m is
-`isBelowLandingAltitude()` against `ap_landing_altitude_m`, default `4`), which disarms
-deliberately and sets `ARMING_DISABLED_ARM_SWITCH`, so the arm switch must be cycled to re-arm.
-That is correct behaviour, not a fault — but it is not what happened here.
-
-**Corrected: the drop was NOT the close-range abort.** It was inferred from an earlier remark
-about testing "close in" and never checked against what was actually flown. The attempt was at
-**20–30 m with ~26 satellites**, well beyond both the 5 m abort and `gps_rescue_min_start_dist`,
-so it took the normal rescue path and still came down.
-
-**What the attempt did prove:** the switch reaches the rescue state machine; **home was set**,
-since a missing home point takes the `RESCUE_NO_HOME_POINT` branch which under `FS_ONLY` hovers for
-20 s rather than disarming; and GPS had a fix with ≥8 sats, since `allow_arming_without_fix = OFF`
-with `min_sats = 8` would otherwise have blocked arming (`fc/core.c:400-407`). Prerequisites 1 and
-2 in `FAILSAFE.md` are effectively cleared.
-
-**What it did not prove, and cannot:** anything about whether the rescue can fly this aircraft.
-Nothing was logged, so the phase, the failure code, and whether the motors stopped in the air or on
-impact are all unrecoverable from recollection, and each points at a different cause. See the flash
-note below — it is not recoverable: the flash was erased unread on 2026-10-02.
-
-**Why nothing was logged — established on the aircraft 2026-09-20.** Not a missing feature flag.
-`blackbox_device` reads `SPIFLASH`, and there is no `feature BLACKBOX` at 2025.12.2 to be missing:
-it appears in none of the three lists `feature` prints, the signature of a feature removed from the
-build. **Logging was enabled the whole time.** The flash was simply **full** — `flash_info` returns
-`usedSize` equal to `totalSize` — so there was nowhere to write. Erase before every attempt. This
-failure is completely silent: nothing warns you, and you land believing you have a log.
-
-**The flash is 16 MB, not 2 MB.** `HARDWARE.md` called it an M25P16 on SPI3 until 2026-09-20.
-`flash_info` reports `totalSize=16777216` and JEDEC `0x852018` — a different manufacturer and
-eight times the capacity. Any sizing argument made against 2 MB was wrong by that factor.
-
-**Erased unread, 2026-10-02 — the old logs are gone.** `flash_info` still read `usedSize` equal to
-`totalSize` (16777216) that day, then `flash_erase` and a re-read gave `usedSize=0`. The contents
-were not downloaded first. Whatever the full flash held — possibly flights up to 2026-09-03, which
-might have distinguished a steady sink from a clean cutoff — cannot be recovered. *Previously this
-passage said to download it before erasing.*
-
-**Leading hypothesis, unconfirmed:** `ap_hover_throttle` was at the `1275` default while this
-airframe hovers near 34% (`1340`). At rescue onset the integrator is reset and target altitude
-equals current altitude, so commanded throttle is essentially that value
-(`autopilot_multirotor.c:195-205`) — below hover, so it sinks. Falling short of the commanded climb
-is then itself a failure that **ignores `gps_rescue_sanity_checks`**: `RESCUE_ATTAIN_ALT` ticks a
-counter once per second when achieved climb is under half the target, forces `RESCUE_LANDING` at
-ten seconds, and disarms after another ten (`gps_rescue_multirotor.c:434-460`, `:826-838`). That
-ends in motors stopping, which matches what was seen.
-
-**Next attempt is the pilot's and is outside the change `configure-pavo20-gps-rescue`.** Trigger
-beyond `gps_rescue_min_start_dist` — 25–30 m — with the hover throttle measured and the log
-running. Bands tabulated in `FAILSAFE.md` under *Where you can and cannot trigger a rescue*.
-
-**Second field trigger, 2026-10-01, on the Oxbot R1: it came home.** Switch-triggered on SD. It
-climbed to about 30 m, flew back toward the pilot "bunny hopping" — oscillating in altitude — and
-began its descent over a tree, so the pilot flipped SD off and flew it manually; control returned
-at once. Almost certainly **not logged**: the flash read full on 2026-09-20 and still full on
-2026-10-02, so there was nowhere to write. `ap_hover_throttle` was still `1340`; the pilot's
-reading of hover on the same flight was **about 42% (`1420`)**, on a **4S 850 mAh** pack — larger
-than BetaFPV's recommended 4S 580/680 mAh (`pavo20-pro-ii/HARDWARE.md`), which the pilot thinks
-is too heavy for it.
-
-- **30 m and the tree are the configuration, not faults.** `MAX_ALT` returns at the highest
-  altitude of the power-up plus `initial_climb = 10` m (`gps_rescue_multirotor.c:186-188`, and see
-  below on `maxAltitudeCm` carrying across arms), so the flight had peaked near 20 m. Descent starts
-  once within `min(0.5 × start distance, descent_dist = 15 m)` of home (`:175`, `:809-810`) and
-  slopes toward the home point, which with `gps_set_home_point_once = ON` is where the aircraft was
-  **first** armed on this battery. Anything tall within ~15 m of that point is in the path. Field
-  rule: first arm of a pack from a spot with clear space around it.
-- **The hopping is not diagnosed.** Leading suspect: the hover baseline. The altitude controller
-  adds P, I (capped ±200), D and F around `ap_hover_throttle` (`autopilot_multirotor.c:167-196`),
-  and the configured baseline sits ~80 below the reported hover, leaving the loop to make up the
-  difference. Alternatives not excluded: baro noise from prop wash in the ducts, and altitude gains
-  too aggressive for this airframe. `debug_mode = AUTOPILOT_ALTITUDE` logs the four terms
-  separately (`:214-217`) and would separate them.
-- **Done 2026-10-02:** `ap_hover_throttle = 1420` applied and read back, and committed in
-  `PAVO20PRO2_GPS_RESCUE_TUNING.txt`. It is right for the 4S 850 mAh pack it was read on; 3S and
-  4S 680 will differ, so re-read hover on any other pack.
-- **Next:** repeat the switch test with the flash erased and `RTH` logging, and let it land by
-  itself unless it misbehaves. Since the failsafe is now live, that test is also the only evidence
-  for what a real signal loss will do. *Superseded:* this bullet said the failsafe stays on `DROP`
-  until a rescue returns without oscillation.
-
-Two source findings came out of setting those, both of which corrected this repo:
-
-- **`gps_rescue_return_alt` is inert under `MAX_ALT`.** It is read only in the `FIXED_ALT` branch
-  (`gps_rescue_multirotor.c:179-181`); `MAX_ALT` computes `maxAltitudeCm + initialClimbCm`
-  (line 186-189). And because `gps_set_home_point_once = ON`, `maxAltitudeCm` is **not** reset on
-  disarm — "if set_home_point_once is true, hold maxAlt until power cycled" (line 160-163) — so the
-  return altitude carries across arms just as home position does. A 60 m pack followed by a low
-  cruise gives a 70 m rescue climb.
-- **`RESCUE_SANITY_FS_ONLY` is safer than `ON` for switch testing, not weaker.** `ON` turns any
-  sanity failure into `RESCUE_ABORT`, which disarms (line 834-838) — during a switch test the quad
-  falls. `FS_ONLY` aborts only on hard Rx loss and otherwise gives 20 s of hover to recover
-  (line 366-375, comment at line 214). During a real failsafe the two are identical, because a real
-  failsafe *is* hard Rx loss. `FAILSAFE.md` previously said to use `ON`; that has been corrected.
-
-GPS Rescue takes its level reference from the accelerometer calibration, so do not test it on a
-board that has been pasted to without a re-level.
-
-### 2. GPSQR widget — bench-verified, field-untested
+### 1. GPSQR widget — parked, field-untested
 
 `radio/WIDGETS/GPSQR/main.lua` shows the last received GPS position as a QR code scannable into
-Google Maps and persists it to the SD card. It is the backup for GPS Rescue, which on the Pavo20
-has never been tested. Review record in `radio/CODE_REVIEW.md`.
+Google Maps and persists it to the SD card. The Pavo20 was the only aircraft with GPS, so the
+widget has no aircraft until the Pavo20 or another GPS aircraft flies. Review record in
+`radio/CODE_REVIEW.md`.
 
 Bench-verified 2026-09-03: loads without error, the QR scans, the status word renders, and a fix
 survives a radio power cycle marked `SAVED`.
+
+The no-fix defect is fixed in the code. `hasFix()` requires at least 5 satellites from the `Sats`
+sensor, and the status line shows `NO FIX (n sat)` or `NO SAT SENSOR`. The `radio/gpsqr-widget`
+spec has the requirement. The fixed code has not run in the field.
 
 Still unknown:
 
 - **Behaviour after a real failsafe.** A clean power cycle is not the same event as telemetry
   stopping mid-stream. Confirm it holds the last fix and counts the age up rather than blanking or
-  freezing on `LIVE`. Props off for the first pass, per `pavo20-pro-ii/FAILSAFE.md`.
+  freezing on `LIVE`.
 - **How far the pin is from where the quad actually lands.** The widget shows the last fix the
-  radio *received*, not the resting place. Never measured. Land normally, pace out the error, write
-  the number down. Until then no accuracy figure is quoted anywhere, on purpose.
+  radio *received*, not the resting place. Never measured. Until then no accuracy figure is quoted
+  anywhere, on purpose.
 - **The coordinate origin, so any zone but full-screen.** EdgeTX does not document whether a
-  widget's LVGL `x`/`y` are relative to its zone or to the screen. A full-screen zone cannot tell
-  you, since the origin is `0, 0` either way. **Until checked, use full-screen.** If it draws at
-  the screen corner, every `x`/`y` in `buildUI` needs `+ w.zone.x` / `+ w.zone.y` — do not add that
-  speculatively, it breaks the full-screen case if the current behaviour is already right.
-- **Square zones.** The square case is the one the shipped code got wrong, so it is the one worth
-  checking.
+  widget's LVGL `x`/`y` are relative to its zone or to the screen. **Until checked, use
+  full-screen.** If it draws at the screen corner, every `x`/`y` in `buildUI` needs `+ w.zone.x` /
+  `+ w.zone.y` — do not add that speculatively.
+- **Square zones.** The square case is the one the shipped code got wrong.
 - **The failed-SD-write path.** Rename `/LOGS/` on the card, run with a live fix for a minute, and
   watch for the radio stuttering.
 
-**Open defect, found 2026-09-03: a position with no fix is displayed and saved as though real.**
-`hasFix()` in `main.lua` guards only against coordinates of `0, 0`. That was the whole no-fix
-signature under NMEA. Under UBLOX it is not: Betaflight assigns `gpsSol.llh` from NAV-PVT
-unconditionally and records fix validity separately (`src/main/io/gps.c:2244-2256`), and
-`crsfFrameGps()` transmits those coordinates with no fix check of its own
-(`src/main/telemetry/crsf.c`). So a receiver with no fix sends the radio plausible, non-zero,
-entirely wrong coordinates — observed as `14.786703, -7.396605`, a point in Mali, while the
-aircraft sat indoors with 3 satellites and `3D Fix` false. The widget displayed it and wrote it to
-the SD card.
-
-The fix direction is known: the same CRSF frame carries `gpsSol.numSat` as its final byte, so a
-satellite count does reach the radio. Which EdgeTX sensor exposes it on the V12 MAX has not been
-checked, and must not be guessed — there is no interpreter or emulator in this repo. Full entry in
-`radio/CODE_REVIEW.md`.
-
 **Accepted defect: the save file is shared across models.** `SAVE_PATH = "/LOGS/gpsqr_last.txt"` is
 one file for the whole radio, so switching models shows the previous model's position marked
-`SAVED` with nothing saying which aircraft it belongs to. For a tool whose only job is telling you
-where to walk, that is a wrong-answer-with-confidence failure, and worse than showing nothing. A
-per-model path would fix it. **Decided 2026-09-03 not to do it.** The operating rule instead: trust
-`LIVE` or an age, treat `SAVED` as "some aircraft's last position". Written up in
-`radio/README.md`. Reopen if the widget is ever relied on across more than one model in a session.
+`SAVED`. **Decided 2026-09-03 not to fix it.** The operating rule: trust `LIVE` or an age, treat
+`SAVED` as "some aircraft's last position". Reopen if the widget is ever relied on across more
+than one model in a session.
 
-### 3. Meteor75 — configs rewritten, flying, checks outstanding
+### 2. Meteor75 — configs rewritten, flying, checks outstanding
 
 On 2026-09-29 the Meteor75 was reported "way too sharp, no range for smooth turns" in Acro. A
 `diff all` showed the aircraft matched no file in the repo: rate profile 0 had Center Sensitivity
@@ -514,33 +257,8 @@ level; do not rely on Angle for take-off or landing until that check has been do
 a replacement flight controller — paste `M75_PRO_ELRS_V1.txt`, calibrate, and expect X within a few
 hundred counts of 0, as the factory board read.
 
-### 4. Decide about the MCU ID in git history
 
-`mcu_id` was redacted from `pavo20-pro-ii/HARDWARE.md` on 2026-09-03, but it was committed in plain
-text in `20b4f45` and is still reachable there. The working tree is clean.
-
-It is a per-board hardware serial, not a credential: it identifies this flight controller and
-cannot be used to reach it. The options are to leave it, or to rewrite history — which on a public
-repo means force-pushing and breaking every clone and fork. Leaving it is defensible. The thing not
-to do is assume it is gone because the current files look clean.
-
-Keep the habit that caught it: `git grep <the id>` across tracked files before committing anything
-captured off the aircraft.
-
-### 5. Known gap: the FireFly25 still commits calibration
-
-The FireFly25 defaults capture carries `acc_calibration` — the defect the Pavo20 configs were
-cleaned of on 2026-09-03 and the Meteor75 configs on 2026-09-29. The Meteor75 now has its own
-`meteor75-pro/flight-config` spec with the same rule. Promoting it to a fleet-wide capability is
-the natural follow-up once both aircraft have flown on their new configs.
-
-### 6. Delete the superseded folders
-
-`D:\Code\Meteor75`, `D:\Code\FireFly25` and `D:\Code\Pavo20Pro2` were copied into this repo and
-left in place as a fallback. Remove them once this repo is confirmed good. The original
-`GPSQR_widget.zip` in `Downloads/` can go at the same time.
-
-### 7. Oxbot R1 — in use on both aircraft
+### 3. Oxbot R1 — in use on both aircraft
 
 Second ELRS radio, on trial against the V12 MAX from 2026-09-30. It runs OXBOT OS, not EdgeTX, so
 the GPSQR widget and the logical-switch alarms do not carry over. Setup, mapping and bench check are
@@ -570,10 +288,6 @@ see `radio/oxbot-r1/README.md` for why `Sats` should still be checked before tru
 quickly, up to 32 satellites — consistent with `GPS` having been its only indoor block. Pilot's
 report: everything worked as expected, no problems noticed, motors not hot. A plain flight; it says
 nothing about a rescue or failsafe on the R1.
-
-Outstanding, in order:
-
-- A rescue test follows `pavo20-pro-ii/FAILSAFE.md`, *Testing on a switch*. It is not an R1 task.
 
 ## Facts that cost real time to establish
 
@@ -677,6 +391,41 @@ batch at `save` and nothing is written.
 
 **The Configurator CLI drops lines from large pastes.** Paste in chunks. One dropped line here
 produced a GPS fault that was misattributed for a long time.
+
+**A full blackbox flash fails silently.** On the Pavo20, `blackbox_device` read `SPIFLASH` and
+logging was on, but `flash_info` gave `usedSize` equal to `totalSize`, so nothing was written. No
+warning shows. Erase the flash before every flight that must be logged. The Cube G4 flash is
+16 MB (JEDEC `0x852018`), not the 2 MB M25P16 that `HARDWARE.md` stated until 2026-09-20.
+There is no `feature BLACKBOX` at 2025.12.2.
+
+**GPS Rescue can disarm in the air whatever `gps_rescue_sanity_checks` says.** In
+`RESCUE_ATTAIN_ALT`, a climb below half the target for 10 s forces `RESCUE_LANDING`, and 10 s more
+disarms (`gps_rescue_multirotor.c:434-460`, `:826-838`, at 2025.12.2). An `ap_hover_throttle`
+below the real hover causes this. Measure hover on the pack in use before a rescue test.
+Within 5 m of home and below 4 m, a rescue disarms on purpose (`:725-727`).
+
+**`RESCUE_SANITY_FS_ONLY` is safer than `ON` for switch tests.** `ON` turns any sanity failure into
+`RESCUE_ABORT`, which disarms (`gps_rescue_multirotor.c:834-838`). `FS_ONLY` hovers for 20 s
+instead, except on hard Rx loss (`:366-375`). In a real failsafe the two are the same.
+
+**`gps_rescue_return_alt` is inert under `MAX_ALT`.** Only the `FIXED_ALT` branch reads it
+(`gps_rescue_multirotor.c:179-181`). With `gps_set_home_point_once = ON`, `maxAltitudeCm` holds
+until power cycle (`:160-163`), so one high flight raises every later rescue on that battery.
+
+**ELRS `8ch` Full-Res switch mode does not send CH10.** At ExpressLRS 3.5.6 it sends CH1–4 and
+CH6–9 only, and the missing channel shows a steady 1500 with no error. `12ch Mixed` sends CH6–13
+but forces CH5 to two positions. The table is in `radio/README.md`, and the rule is the
+`radio/elrs-link` spec.
+
+**`mcu_id` stays in git history.** The Pavo20 `mcu_id` is still in plain text in commit
+`20b4f45`. On 2026-11-17 the pilot decided to keep the history as it is. The value is a board
+serial, not a credential, and that board is now burned. Run `git grep <the id>` before you commit
+a capture from an aircraft.
+
+**Calibration in a capture is correct; calibration in a paste-able config is not.** Every file in
+a `dumps/` folder keeps `acc_calibration`, because it records the board on that day. The
+FireFly25 defaults file is a capture of this type. Only configs that a person pastes must omit
+calibration. This closed the FireFly25 calibration item on 2026-11-17.
 
 ## Method note
 

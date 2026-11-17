@@ -96,7 +96,11 @@ See [source review](SOURCE_REVIEW.md#rates-and-throttle) for the formula and evi
 
 ## Verification state
 
-As of 2026-10-14:
+**Closed 2026-11-17.** The pilot flew the aircraft regularly from 2026-10-12 and reported it
+"exceptional". The pilot then closed the remaining checks. The individual motor test and the
+link-loss bench test were never done. Do not report them as passed.
+
+The record below is the state as of 2026-10-14:
 
 The pilot requested [archival](../openspec/changes/archive/2026-10-14-configure-meteor75-pro-ii/) with the remaining checks documented.
 Unperformed checks remain unverified. Keep the current rates and throttle curve.

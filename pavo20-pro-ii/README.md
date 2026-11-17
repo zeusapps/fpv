@@ -2,6 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+> **Out of service, reported 2026-11-17.** The 4S AIO burned; the pilot suspects a MOSFET fault. The
+> files in this folder describe the burned board. Do not paste them onto a replacement board
+> before you read `../HANDOFF.md` under *Pavo20 Pro II — out of service*.
+
 ## Project Overview
 
 This repository contains **Betaflight CLI configuration dumps** for a **BetaFPV Pavo20 Pro II**
